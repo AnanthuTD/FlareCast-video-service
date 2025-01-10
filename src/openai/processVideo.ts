@@ -17,7 +17,7 @@ export const processVideo = async (inputVideo: string, videoId: string) => {
 
 				console.log("✅ Generated Title and Summary:", result);
 
-				prisma.video.update({
+				await prisma.video.update({
 					where: { id: videoId },
 					data: {
 						title: result.title,

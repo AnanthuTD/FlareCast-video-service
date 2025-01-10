@@ -50,7 +50,7 @@ export const createThumbnails = async (
 			.screenshots({
 				count: Math.floor(videoDurationNum / 10),
 				timemarks,
-				filename: "thumb%04d.jpg",
+				filename: "thumb%0000i.jpg",
 				folder: thumbnailOutputDir,
 			});
 	} catch (err) {

@@ -15,6 +15,7 @@ const env = cleanEnv(process.env, {
 	OPEN_AI_API_KEY: str(),
 	GEMINI_API_KEY: str(),
 	ACCESS_TOKEN_SECRET: str(),
+	GCS_PUBLIC_URL: url(),
 });
 
 export default env;

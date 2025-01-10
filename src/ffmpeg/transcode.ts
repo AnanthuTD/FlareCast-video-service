@@ -58,7 +58,8 @@ export function createMasterPlaylist(gcsPath, resolutions) {
   resolutions.forEach((res) => {
     const bandwidth = getBitrate(res) * 1000; // Bitrate in bits/s
     playlist += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=1280x${res},CODECS="avc1.42E01E,mp4a.40.2"\n`; // Adjust codecs if needed
-    playlist += `${path.join(gcsPath, `${res}p.m3u8`)}\n`;
+    // playlist += `${path.join(gcsPath, `${res}p.m3u8`)}\n`;
+    playlist += `${res}p.m3u8\n`;
   });
   return playlist;
 }

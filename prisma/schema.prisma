@@ -12,9 +12,9 @@ model Video {
   title         String?  @default("Untilted Video")
   description   String?  @default("No Description")
   createdAt     DateTime @default(now())
-  userId        String?
+  userId        String
   processing    Boolean  @default(true)
   views         Int      @default(0)
-  summery       String?
-  transcription String?
+  summery       String?  @default("")
+  transcription String?  @default("")
 }
