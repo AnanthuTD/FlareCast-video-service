@@ -12,6 +12,9 @@ const env = cleanEnv(process.env, {
 	GOOGLE_CLOUD_BUCKET_NAME: str(),
 	FFMPEG_LOCATION: str(),
 	COLLABORATION_API_URL: url(),
+	OPEN_AI_API_KEY: str(),
+	GEMINI_API_KEY: str(),
+	ACCESS_TOKEN_SECRET: str(),
 });
 
 export default env;

@@ -11,7 +11,7 @@ const storage = new Storage({
 	keyFilename: env.GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY,
 	projectId: env.GOOGLE_CLOUD_PROJECT_ID,
 });
-console.log("bucket name: ", BUCKET_NAME);
+
 const bucket = storage.bucket(BUCKET_NAME);
 
 export async function createHLSAndUpload(inputPath: string, outputDir: string, gcsPath: string) {
@@ -33,23 +33,23 @@ export async function createHLSAndUpload(inputPath: string, outputDir: string, g
 		// 4. Cleanup local files (Optional but recommended)
 		// await fs.rm(outputDir, { recursive: true, force: true });
 
-		console.log("HLS creation and upload complete!");
+		console.log("🟢 HLS creation and upload complete!");
 	} catch (error) {
-		console.error("Error processing HLS and upload:", error);
+		console.error("🔴 Error processing HLS and upload:", error);
 		throw error;
 	}
 }
 
-async function uploadDirectoryToGCS(localDir, gcsPath) {
+export async function uploadDirectoryToGCS(localDir: string, gcsPath: string) {
 	const files = await fs.readdir(localDir);
 	const uploadPromises = files.map(async (file) => {
 		const localFilePath = path.join(localDir, file);
 		const gcsFilePath = `${gcsPath}/${file}`;
 		try {
 			await bucket.upload(localFilePath, { destination: gcsFilePath });
-			console.log(`Uploaded ${file} to gs://${BUCKET_NAME}/${gcsFilePath}`);
+			console.log(`🟢 Uploaded ${file} to gs://${BUCKET_NAME}/${gcsFilePath}`);
 		} catch (error) {
-			console.error(`Error uploading ${file}:`, error);
+			console.error(`🔴 Error uploading ${file}:`, error);
 			throw error;
 		}
 	});
