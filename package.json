@@ -6,6 +6,7 @@
 	"type": "commonjs",
 	"scripts": {
 		"dev": "dotenvx run -- ts-node-dev --rs --transpile-only src/index.ts",
+		"docker:dev": "ts-node-dev --rs --transpile-only src/index.ts",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"tsc": "npx tsc -p .",
@@ -16,34 +17,27 @@
 	"license": "ISC",
 	"packageManager": "pnpm@9.15.2+sha512.93e57b0126f0df74ce6bff29680394c0ba54ec47246b9cf321f0121d8d9bb03f750a705f24edc3c1180853afd7c2c3b94196d0a3d53d3e069d9e2793ef11f321",
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.723.0",
-		"@aws-sdk/lib-storage": "^3.723.0",
 		"@dotenvx/dotenvx": "^1.32.0",
-		"@ffmpeg/core": "^0.12.10",
-		"@ffmpeg/ffmpeg": "^0.12.15",
 		"@google-cloud/storage": "^7.15.0",
 		"@google/generative-ai": "^0.21.0",
 		"@prisma/client": "^6.1.0",
-		"aws-sdk": "^2.1692.0",
 		"axios": "^1.7.9",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.7",
 		"envalid": "^8.0.0",
 		"express": "^4.21.2",
-		"ffmpeg": "^0.0.4",
 		"fix-webm-duration": "^1.0.6",
 		"fluent-ffmpeg": "^2.1.3",
 		"hound": "^1.0.5",
+		"kafkajs": "^2.2.4",
 		"morgan": "^1.10.0",
-		"nodemon": "^3.1.9",
-		"openai": "^4.77.3",
 		"passport-jwt": "^4.0.1",
 		"socket.io": "^4.8.1",
-		"webm-duration-fix": "^1.0.4",
-		"zod": "^3.24.1"
+		"webm-duration-fix": "^1.0.4"
 	},
 	"devDependencies": {
+		"nodemon": "^3.1.9",
 		"@types/cookie-parser": "^1.4.8",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^5.0.0",
@@ -55,8 +49,6 @@
 		"prisma": "^6.1.0",
 		"ts-node": "^10.9.2",
 		"ts-node-dev": "^2.0.0",
-		"tslib": "^2.8.1",
-		"tsx": "^4.19.2",
 		"typescript": "^5.7.2"
 	}
 }

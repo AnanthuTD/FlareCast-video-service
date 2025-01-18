@@ -1,5 +1,6 @@
 import axios from "axios";
 import { readFileSync } from "fs";
+import env from "../env";
 
 export async function generateTranscript(inputFilePath: string) {
 	try {
@@ -10,7 +11,7 @@ export async function generateTranscript(inputFilePath: string) {
 		formData.append("file", blob, inputFilePath);
 
 		const response = await axios.post(
-			"http://127.0.0.1:5000/transcribe",
+			env.WHISPER_API,
 			formData,
 			{
 				headers: {

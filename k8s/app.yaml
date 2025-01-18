@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-app
+  template:
+    metadata:
+      labels:
+        app: video-app
+    spec:
+      containers:
+        - name: video-app
+          image: ananthutd2003/flarecast-video-service
+          command: ["pnpm", "docker:dev"]
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: NODE_ENV
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: PORT
+            - name: ELECTRON_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: ELECTRON_HOST
+            - name: GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: video-app-secrets
+                  key: GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY
+            - name: GOOGLE_CLOUD_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: GOOGLE_CLOUD_PROJECT_ID
+            - name: GOOGLE_CLOUD_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: GOOGLE_CLOUD_BUCKET_NAME
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: DATABASE_URL
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: video-app-secrets
+                  key: GEMINI_API_KEY
+            - name: ACCESS_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: video-app-secrets
+                  key: ACCESS_TOKEN_SECRET
+            - name: FFMPEG_LOCATION
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: FFMPEG_LOCATION
+            - name: COLLABORATION_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: COLLABORATION_API_URL
+            - name: WHISPER_API
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: WHISPER_API
+            - name: KAFKA_BROKER
+              valueFrom:
+                configMapKeyRef:
+                  name: video-app-config
+                  key: KAFKA_BROKER
+            - name: KAFKA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: video-app-secrets
+                  key: KAFKA_USERNAME
+            - name: KAFKA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: video-app-secrets
+                  key: KAFKA_PASSWORD
+            - name: GCS_PUBLIC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: video-app-secrets
+                  key: GCS_PUBLIC_URL
+
+          ports:
+            - containerPort: 4003
+          resources:
+            requests:
+              memory: "1Gi"  # Adjusted from 500Mi
+              cpu: "1"      # Adjusted from 500m
+            limits:
+              memory: "1Gi"    # Adjusted from 700Mi
+              cpu: "1"         # Adjusted from 700m
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-app
+spec:
+  selector:
+    app: video-app
+  ports:
+  - protocol: TCP
+    targetPort: 4003
+    port: 4003

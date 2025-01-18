@@ -1,4 +1,4 @@
-import { cleanEnv, str, port, url } from "envalid";
+import { cleanEnv, str, port, url,  } from "envalid";
 
 const env = cleanEnv(process.env, {
 	NODE_ENV: str({
@@ -12,9 +12,14 @@ const env = cleanEnv(process.env, {
 	GOOGLE_CLOUD_BUCKET_NAME: str(),
 	FFMPEG_LOCATION: str(),
 	COLLABORATION_API_URL: url(),
-	OPEN_AI_API_KEY: str(),
 	GEMINI_API_KEY: str(),
 	ACCESS_TOKEN_SECRET: str(),
+	KAFKA_BROKER: str(),
+	KAFKA_USERNAME: str(),
+  KAFKA_PASSWORD: str(),
+	WHISPER_API: str(),
+	GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE: str({ default: undefined }),
+	GCS_PUBLIC_URL: url(),
 });
 
 export default env;

@@ -1,14 +1,27 @@
 import { execSync } from 'child_process';
-import { renameSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, renameSync, unlinkSync } from 'fs';
+import path from 'path';
 
 export async function fixWebMDuration(inputPath: string, outputPath: string) {
   console.log(inputPath, outputPath);
+  // Step 1: Remux the WebM file (no re-encoding)
+  const outputDir = path.dirname(outputPath);
+  if (!existsSync(outputDir)) {
+    try {
+      mkdirSync(outputDir, { recursive: true }); // Create the directory and any missing parent directories
+      console.log(`Created directory: ${outputDir}`);
+    } catch (error) {
+      console.error('Error creating directory:', error);
+      return;
+    }
+  }
+
   // Step 1: Remux the WebM file (no re-encoding)
   try {
     execSync(`ffmpeg -i "${inputPath}" -c copy "${outputPath}"`);
     console.log(`WebM file remuxed successfully: ${outputPath}`);
 
-    unlinkSync(inputPath)
+    unlinkSync(inputPath);
     renameSync(outputPath, inputPath);
   } catch (error) {
     console.error('Error during remuxing the WebM file:', error);
