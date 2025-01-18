@@ -2,22 +2,26 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 
-export async function createHLS(inputPath, outputDir, resolutions = [480, 720, 1080]) {
+export async function createHLS(
+	inputPath,
+	outputDir,
+	resolutions = [480, 720]
+) {
 	try {
 		fs.mkdirSync(outputDir, { recursive: true });
 
-		const promises = resolutions.map(async (resolution) => {
+		for (const resolution of resolutions) {
 			const outputPath = path.join(outputDir, `${resolution}p.m3u8`);
 			const segmentFilename = path.join(outputDir, `${resolution}p_%03d.ts`);
-      const FFMPEG_LOCATION = process.env.FFMPEG_LOCATION
+			const FFMPEG_LOCATION = process.env.FFMPEG_LOCATION; // Ensure this is set correctly
 
-			const command = `${FFMPEG_LOCATION} -i "${inputPath}" -vf scale="trunc(oh*a/2)*2:${resolution}" -c:v libx264 -b:v ${getBitrate(
+			const command = `ffmpeg -i "${inputPath}" -vf scale="trunc(oh*a/2)*2:${resolution}" -c:v libx264 -b:v ${getBitrate(
 				resolution
 			)}k -c:a aac -ar 44100 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename "${segmentFilename}" "${outputPath}"`;
 
 			console.log(`Executing command for ${resolution}p: ${command}`);
 
-			return new Promise((resolve, reject) => {
+			await new Promise((resolve, reject) => {
 				exec(command, (error, stdout, stderr) => {
 					if (error) {
 						console.error(`Error for ${resolution}p:`, error);
@@ -29,9 +33,8 @@ export async function createHLS(inputPath, outputDir, resolutions = [480, 720, 1
 					}
 				});
 			});
-		});
+		}
 
-		await Promise.all(promises);
 		console.log("All resolutions processed successfully!");
 		return outputDir;
 	} catch (err) {
@@ -47,7 +50,7 @@ const getBitrate = (resolution) => {
 		case 720:
 			return 2000;
 		case 1080:
-			return 4000;
+			return 2500; // 4000
 		default:
 			return 800;
 	}

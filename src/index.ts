@@ -14,6 +14,7 @@ import { processVideo } from "./openai/processVideo";
 import passport from "passport";
 import "./authentication/JwtStrategy";
 import { createThumbnails } from "./createThumbnails";
+import "./kafka";
 
 const PORT = env.PORT;
 const app = express();

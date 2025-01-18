@@ -1,16 +1,35 @@
 import fs from "fs/promises";
 import path from "path";
-import { Storage } from "@google-cloud/storage";
+import { Storage, StorageOptions } from "@google-cloud/storage";
 import { createHLS, createMasterPlaylist } from "./ffmpeg/transcode";
 import env from "./env";
+import { existsSync } from "fs";
 
 const BUCKET_NAME = env.GOOGLE_CLOUD_BUCKET_NAME;
-const RESOLUTIONS = [480, 720, 1080];
+const RESOLUTIONS = [480, 720];
 
-const storage = new Storage({
-	keyFilename: env.GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY,
-	projectId: env.GOOGLE_CLOUD_PROJECT_ID,
-});
+const { GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE, GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY, GOOGLE_CLOUD_PROJECT_ID } = process.env;
+
+if (!GOOGLE_CLOUD_PROJECT_ID) {
+    throw new Error('GOOGLE_CLOUD_PROJECT_ID is not set in environment variables.');
+}
+
+let storageConfig: StorageOptions = { projectId: GOOGLE_CLOUD_PROJECT_ID };
+
+if (GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE && existsSync(GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE)) {
+    // Use the key file if it exists
+    storageConfig.keyFilename = GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE;
+    console.log('Using service account key file for authentication.');
+} else if (GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY) {
+    // Fall back to inline credentials if the file isn't available
+    storageConfig.credentials = JSON.parse(GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY);
+    console.log('Using inline service account credentials for authentication.');
+} else {
+    throw new Error('Neither GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE nor GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY is available.');
+}
+
+// Initialize the Storage instance
+const storage = new Storage(storageConfig);
 
 const bucket = storage.bucket(BUCKET_NAME);
 
