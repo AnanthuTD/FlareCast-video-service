@@ -6,6 +6,7 @@ import fs from "fs";
 import { uploadDirectoryToGCS } from "./uploadToGCS";
 import { logger } from "./logger/logger";
 import env from "./env";
+import prisma from "./prismaClient";
 
 export const createThumbnails = async (
 	videoPath: string,
@@ -24,6 +25,15 @@ export const createThumbnails = async (
 			);
 			return;
 		}
+
+		prisma.video.update({
+			where: {
+				id: gcsPath.split("/").pop(),
+			},
+			data: {
+        duration: videoDuration
+      },
+		});
 
 		const videoDurationNum = parseFloat(videoDuration);
 
@@ -63,7 +73,11 @@ export const createThumbnails = async (
 	}
 };
 
-function generateVTTFile(filenames: string[], gcsPath: string, thumbnailOutputDir: string) {
+function generateVTTFile(
+	filenames: string[],
+	gcsPath: string,
+	thumbnailOutputDir: string
+) {
 	const vttContent: string[] = [];
 	const timeDiff = 10;
 
@@ -97,15 +111,18 @@ function generateVTTFile(filenames: string[], gcsPath: string, thumbnailOutputDi
 
 // Function to format time in VTT format (HH:MM:SS.MMM)
 function formatTime(seconds) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  const milliseconds = Math.round((remainingSeconds % 1) * 1000);
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remainingSeconds = seconds % 60;
+	const milliseconds = Math.round((remainingSeconds % 1) * 1000);
 
-  const formattedHours = String(hours).padStart(2, '0');
-  const formattedMinutes = String(minutes).padStart(2, '0');
-  const formattedSeconds = String(Math.floor(remainingSeconds)).padStart(2, '0');
-  const formattedMilliseconds = String(milliseconds).padStart(3, '0');
+	const formattedHours = String(hours).padStart(2, "0");
+	const formattedMinutes = String(minutes).padStart(2, "0");
+	const formattedSeconds = String(Math.floor(remainingSeconds)).padStart(
+		2,
+		"0"
+	);
+	const formattedMilliseconds = String(milliseconds).padStart(3, "0");
 
-  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
+	return `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
 }

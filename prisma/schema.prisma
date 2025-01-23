@@ -17,4 +17,5 @@ model Video {
   views         Int      @default(0)
   summery       String?  @default("")
   transcription String?  @default("")
+  duration      String      @default("0")
 }
