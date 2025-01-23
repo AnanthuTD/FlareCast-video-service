@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import { uploadDirectoryToGCS } from "./uploadToGCS";
 import { logger } from "./logger/logger";
+import env from "./env";
 
 export const createThumbnails = async (
 	videoPath: string,
@@ -40,9 +41,12 @@ export const createThumbnails = async (
 		ffmpeg(videoPath)
 			.on("filenames", function (filenames) {
 				logger.info("screenshots are " + filenames.join(", "));
+				generateVTTFile(filenames, gcsPath, thumbnailOutputDir);
 			})
 			.on("end", () => {
-				logger.info("✅ Thumbnails generated successfully.\n⚙️ Now uploading thumbnails to GCS...");
+				logger.info(
+					"✅ Thumbnails generated successfully.\n⚙️ Now uploading thumbnails to GCS..."
+				);
 				uploadDirectoryToGCS(thumbnailOutputDir, gcsPath + "/thumbnails");
 			})
 			.on("error", (err) => {
@@ -58,3 +62,50 @@ export const createThumbnails = async (
 		logger.error("🔴 Error creating thumbnails:", err);
 	}
 };
+
+function generateVTTFile(filenames: string[], gcsPath: string, thumbnailOutputDir: string) {
+	const vttContent: string[] = [];
+	const timeDiff = 10;
+
+	const timemarks = filenames.map((fileNames, index) => index * 10);
+
+	const thumbnailBaseURL = `${env.GOOGLE_CLOUD_PUBLIC_URL}/${gcsPath
+		.split("/")
+		.at(-1)}/thumbnails/`;
+
+	filenames.forEach((filename, index) => {
+		const time = timemarks[index];
+		const timeStart = formatTime(time);
+		const timeEnd = formatTime(time + timeDiff);
+
+		const thumbnailURL = `${thumbnailBaseURL}${filename}#xywh=0,0,427,240`;
+
+		vttContent.push(`${index + 1}`);
+		vttContent.push(`${timeStart} --> ${timeEnd}`);
+		vttContent.push(thumbnailURL);
+		vttContent.push("");
+	});
+
+	const vttFileContent = `WEBVTT\n\n${vttContent.join("\n")}`;
+
+	// Write the VTT content to a file
+	const vttFilePath = path.join(thumbnailOutputDir, "thumbnails.vtt");
+	fs.writeFileSync(vttFilePath, vttFileContent);
+
+	logger.info("✅ VTT file generated: " + vttFilePath);
+}
+
+// Function to format time in VTT format (HH:MM:SS.MMM)
+function formatTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  const milliseconds = Math.round((remainingSeconds % 1) * 1000);
+
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(Math.floor(remainingSeconds)).padStart(2, '0');
+  const formattedMilliseconds = String(milliseconds).padStart(3, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
+}

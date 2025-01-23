@@ -1,4 +1,4 @@
-import { cleanEnv, str, port, url,  } from "envalid";
+import { cleanEnv, str, port, url } from "envalid";
 
 const env = cleanEnv(process.env, {
 	NODE_ENV: str({
@@ -16,14 +16,15 @@ const env = cleanEnv(process.env, {
 	ACCESS_TOKEN_SECRET: str(),
 	KAFKA_BROKER: str(),
 	KAFKA_USERNAME: str(),
-  KAFKA_PASSWORD: str(),
+	KAFKA_PASSWORD: str(),
 	WHISPER_API: str(),
 	GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE: str({ default: undefined }),
 	GCS_PUBLIC_URL: url(),
 	HUGGINGFACE_TOKEN: str(),
 	GRAFANA_HOST: str(),
-  LOKI_API_KEY: str(),
-  LOKI_USER_ID: str(),
+	LOKI_API_KEY: str(),
+	LOKI_USER_ID: str(),
+	GOOGLE_CLOUD_PUBLIC_URL: str(),
 });
 
 export default env;
