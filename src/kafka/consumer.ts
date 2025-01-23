@@ -1,3 +1,4 @@
+import { logger } from "../logger/logger";
 import kafka from "./kafka";
 
 const consumer = kafka.consumer({
@@ -6,7 +7,7 @@ const consumer = kafka.consumer({
 
 export async function consumeMessages() {
 	const topics = ["user-events"];
-  console.log("⌛ Consuming messages from topic(s):", topics);
+  logger.info("⌛ Consuming messages from topic(s):", topics);
 
 	try {
 		await consumer.connect();
@@ -14,7 +15,7 @@ export async function consumeMessages() {
 
 		await consumer.run({
 			eachMessage: async ({ topic, partition, message }) => {
-				console.log({
+				logger.info({
 					topic,
 					partition,
 					message: message.value?.toString(),
@@ -22,6 +23,6 @@ export async function consumeMessages() {
 			},
 		});
 	} catch (error) {
-		console.error("🔴 Error consuming messages:", error);
+		logger.error("🔴 Error consuming messages:", error);
 	}
 }

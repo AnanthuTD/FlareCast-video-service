@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import path from "path";
 import fs from "fs";
 import { uploadDirectoryToGCS } from "./uploadToGCS";
+import { logger } from "./logger/logger";
 
 export const createThumbnails = async (
 	videoPath: string,
@@ -17,7 +18,7 @@ export const createThumbnails = async (
 		);
 
 		if (!videoDuration) {
-			console.log(
+			logger.info(
 				"🔴 Unable to fix video duration. Skipping thumbnail generation."
 			);
 			return;
@@ -34,18 +35,18 @@ export const createThumbnails = async (
 			(_, i) => `${i * 10}`
 		);
 
-		console.log("====timemarks===", timemarks, videoDuration);
+		logger.info("====timemarks===", timemarks, videoDuration);
 
 		ffmpeg(videoPath)
 			.on("filenames", function (filenames) {
-				console.log("screenshots are " + filenames.join(", "));
+				logger.info("screenshots are " + filenames.join(", "));
 			})
 			.on("end", () => {
-				console.log("✅ Thumbnails generated successfully.\n⚙️ Now uploading thumbnails to GCS...");
+				logger.info("✅ Thumbnails generated successfully.\n⚙️ Now uploading thumbnails to GCS...");
 				uploadDirectoryToGCS(thumbnailOutputDir, gcsPath + "/thumbnails");
 			})
 			.on("error", (err) => {
-				console.error("🔴 Error generating thumbnails:", err);
+				logger.error("🔴 Error generating thumbnails:", err);
 			})
 			.screenshots({
 				count: Math.floor(videoDurationNum / 10),
@@ -54,6 +55,6 @@ export const createThumbnails = async (
 				folder: thumbnailOutputDir,
 			});
 	} catch (err) {
-		console.error("🔴 Error creating thumbnails:", err);
+		logger.error("🔴 Error creating thumbnails:", err);
 	}
 };

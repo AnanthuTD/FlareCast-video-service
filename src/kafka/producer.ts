@@ -1,3 +1,4 @@
+import { logger } from "../logger/logger";
 import kafka from "./kafka";
 
 const producer = kafka.producer({});
@@ -13,6 +14,6 @@ export async function sendMessage(topic: string, message: string) {
 
 		await producer.disconnect();
 	} catch (error) {
-    console.error("🔴 Failed to send message to " + topic, error);
+    logger.error("🔴 Failed to send message to " + topic, error);
   }
 }

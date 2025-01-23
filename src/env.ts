@@ -7,7 +7,7 @@ const env = cleanEnv(process.env, {
 	PORT: port(),
 	DATABASE_URL: url(),
 	ELECTRON_HOST: url(),
-	GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY: str(),
+	GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY: str({ default: undefined }),
 	GOOGLE_CLOUD_PROJECT_ID: str(),
 	GOOGLE_CLOUD_BUCKET_NAME: str(),
 	FFMPEG_LOCATION: str(),
@@ -20,6 +20,10 @@ const env = cleanEnv(process.env, {
 	WHISPER_API: str(),
 	GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE: str({ default: undefined }),
 	GCS_PUBLIC_URL: url(),
+	HUGGINGFACE_TOKEN: str(),
+	GRAFANA_HOST: str(),
+  LOKI_API_KEY: str(),
+  LOKI_USER_ID: str(),
 });
 
 export default env;

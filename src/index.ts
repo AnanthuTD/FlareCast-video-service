@@ -15,6 +15,7 @@ import passport from "passport";
 import "./authentication/JwtStrategy";
 import { createThumbnails } from "./createThumbnails";
 import "./kafka";
+import { logger } from "./logger/logger";
 
 const PORT = env.PORT;
 const app = express();
@@ -37,14 +38,14 @@ const io = new Server(server, {
 let recordedChunks: BlobEvent["data"][] = [];
 
 io.on("connection", (socket) => {
-	console.log(`🟢 Socket connected: ${socket.id}`);
+	logger.info(`🟢 Socket connected: ${socket.id}`);
 
 	socket.on("disconnect", () => {
-		console.log(`🔴 Socket disconnected: ${socket.id}`);
+		logger.info(`🔴 Socket disconnected: ${socket.id}`);
 	});
 
 	socket.on("video:chunks", (data: { fileName: string; chunks: Buffer }) => {
-		console.log(`🟣 Video chunk received for ${data.fileName}`, data);
+		logger.info(`🟣 Video chunk received for ${data.fileName}`, data);
 
 		// Ensure the upload directory exists
 		const uploadDir = path.join("temp_upload");
@@ -58,9 +59,9 @@ io.on("connection", (socket) => {
 
 		writeStream.write(data.chunks, (err) => {
 			if (err) {
-				console.error("Error writing chunk to file:", err);
+				logger.error("Error writing chunk to file:", err);
 			} else {
-				console.log("Chunk written successfully!");
+				logger.info("Chunk written successfully!");
 			}
 		});
 	});
@@ -69,7 +70,7 @@ io.on("connection", (socket) => {
 		"process:video",
 		async (data: { userId: string; fileName: string }) => {
 			// Type for received data
-			console.log("⚙️ Processing video...");
+			logger.info("⚙️ Processing video...");
 
 			recordedChunks = [];
 
@@ -93,7 +94,7 @@ io.on("connection", (socket) => {
 				// TODO: Fetch plan from user_service.
 				if (true) await processVideo(inputVideo, newVideo.id);
 			} catch (error) {
-				console.error("🔴 HLS processing failed:", error);
+				logger.error("🔴 HLS processing failed:", error);
 			}
 
 			try {
@@ -103,9 +104,9 @@ io.on("connection", (socket) => {
 						processing: false,
 					},
 				});
-				console.log("✅ prisma video processing completed successfully!");
+				logger.info("✅ prisma video processing completed successfully!");
 			} catch (error) {
-				console.error("🔴 prisma video processing failed:", error);
+				logger.error("🔴 prisma video processing failed:", error);
 			}
 		}
 	);
@@ -117,11 +118,11 @@ app.use((req: Request, res: Response) => {
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-	console.error(err.stack);
+	logger.error(err.stack);
 	res.status(500).send("Something went wrong!");
 	next();
 });
 
 server.listen(PORT, async () => {
-	console.log(`🟢 Server is running on port ${PORT}`);
+	logger.info(`🟢 Server is running on port ${PORT}`);
 });

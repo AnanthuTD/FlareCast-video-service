@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import env from "../env";
+import { logger } from "../logger/logger";
 
 interface SummaryAndTitle {
 	title: string;
@@ -10,7 +11,7 @@ export async function generateSummaryAndTitle(
 	transcript: string
 ): Promise<SummaryAndTitle | null> {
 	if (!transcript || transcript.trim() === "") {
-		console.error("🔴 Transcript is empty.");
+		logger.error("🔴 Transcript is empty.");
 		return null;
 	}
 
@@ -29,18 +30,18 @@ export async function generateSummaryAndTitle(
 		const result = await model.generateContent(prompt);
 
 		if (!result || !result.response || !result.response.text()) {
-			console.error("🔴 Unexpected API response:", result);
+			logger.error("🔴 Unexpected API response:", result);
 			return null;
 		}
 
 		const responseText = result.response.text();
-		console.log("raw response: ", responseText);
+		logger.info("raw response: ", responseText);
 		// Attempt to parse JSON, handle failures gracefully
 		try {
 			const jsonResult: SummaryAndTitle = JSON.parse(responseText);
 			return jsonResult;
 		} catch (jsonError) {
-			console.error(
+			logger.error(
 				"Error parsing JSON:",
 				jsonError,
 				" Raw Response: ",
@@ -54,16 +55,16 @@ export async function generateSummaryAndTitle(
 					.replace(/(\n)/g, "")
 					.replace("```json", "")
 					.replace("```", "");
-				console.log("cleaned up: ", cleanResponse);
+				logger.info("cleaned up: ", cleanResponse);
 				const jsonResult: SummaryAndTitle = JSON.parse(cleanResponse);
 				return jsonResult;
 			} catch (cleanUpError) {
-				console.error("🔴 Could not cleanup response", cleanUpError);
+				logger.error("🔴 Could not cleanup response", cleanUpError);
 				return null;
 			}
 		}
 	} catch (error) {
-		console.error("🔴 Error generating summary and title:", error);
+		logger.error("🔴 Error generating summary and title:", error);
 		return null; // Or throw the error, depending on your application needs
 	}
 }

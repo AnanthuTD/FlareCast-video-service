@@ -1,6 +1,7 @@
 import axios from "axios";
 import { readFileSync } from "fs";
 import env from "../env";
+import { logger } from "../logger/logger";
 
 export async function generateTranscript(inputFilePath: string) {
 	try {
@@ -20,10 +21,10 @@ export async function generateTranscript(inputFilePath: string) {
 			}
 		);
 
-		console.log("Transcript generated:", response.data);
+		logger.info("Transcript generated:", response.data);
 		return response.data.transcript; // Return the data for use elsewhere
 	} catch (error) {
-		console.error("Error generating transcript:", error);     
+		logger.error("Error generating transcript:", error);     
 		throw error; // Re-throw the error to be handled by the caller 
 	}
 }

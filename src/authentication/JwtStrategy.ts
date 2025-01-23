@@ -5,6 +5,7 @@ import {
 	StrategyOptionsWithoutRequest,
 } from "passport-jwt";
 import env from "../env";
+import { logger } from "../logger/logger";
 
 const opts = {
 	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -14,9 +15,9 @@ const opts = {
 passport.use(
 	new JwtStrategy(opts, async (jwt_payload, done) => {
 		try {
-			console.log("============jwt_payload==============");
-			console.log(jwt_payload);
-			console.log("=====================================");
+			logger.info("============jwt_payload==============");
+			logger.info(jwt_payload);
+			logger.info("=====================================");
 
 			const user = { id: jwt_payload.id };
 			if (user) {

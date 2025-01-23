@@ -1,17 +1,18 @@
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, renameSync, unlinkSync } from 'fs';
 import path from 'path';
+import { logger } from './logger/logger';
 
 export async function fixWebMDuration(inputPath: string, outputPath: string) {
-  console.log(inputPath, outputPath);
+  logger.info(inputPath, outputPath);
   // Step 1: Remux the WebM file (no re-encoding)
   const outputDir = path.dirname(outputPath);
   if (!existsSync(outputDir)) {
     try {
       mkdirSync(outputDir, { recursive: true }); // Create the directory and any missing parent directories
-      console.log(`Created directory: ${outputDir}`);
+      logger.info(`Created directory: ${outputDir}`);
     } catch (error) {
-      console.error('Error creating directory:', error);
+      logger.error('Error creating directory:', error);
       return;
     }
   }
@@ -19,12 +20,12 @@ export async function fixWebMDuration(inputPath: string, outputPath: string) {
   // Step 1: Remux the WebM file (no re-encoding)
   try {
     execSync(`ffmpeg -i "${inputPath}" -c copy "${outputPath}"`);
-    console.log(`WebM file remuxed successfully: ${outputPath}`);
+    logger.info(`WebM file remuxed successfully: ${outputPath}`);
 
     unlinkSync(inputPath);
     renameSync(outputPath, inputPath);
   } catch (error) {
-    console.error('Error during remuxing the WebM file:', error);
+    logger.error('Error during remuxing the WebM file:', error);
     return;
   }
 
@@ -35,14 +36,14 @@ export async function fixWebMDuration(inputPath: string, outputPath: string) {
       .trim();
 
     if (duration === 'N/A') {
-      console.log('Unable to get the duration from the remuxed WebM file.');
+      logger.info('Unable to get the duration from the remuxed WebM file.');
     } else {
-      console.log(`Duration of the remuxed WebM file: ${duration} seconds`);
+      logger.info(`Duration of the remuxed WebM file: ${duration} seconds`);
     }
 
     return duration
   } catch (error) {
-    console.error('Error during getting duration of the WebM file:', error);
+    logger.error('Error during getting duration of the WebM file:', error);
   }
 }
 

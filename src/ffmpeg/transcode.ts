@@ -1,6 +1,7 @@
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
+import { logger } from "../logger/logger";
 
 export async function createHLS(
 	inputPath,
@@ -19,26 +20,26 @@ export async function createHLS(
 				resolution
 			)}k -c:a aac -ar 44100 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename "${segmentFilename}" "${outputPath}"`;
 
-			console.log(`Executing command for ${resolution}p: ${command}`);
+			logger.info(`Executing command for ${resolution}p: ${command}`);
 
 			await new Promise((resolve, reject) => {
 				exec(command, (error, stdout, stderr) => {
 					if (error) {
-						console.error(`Error for ${resolution}p:`, error);
-						console.error(`Stderr for ${resolution}p:`, stderr);
+						logger.error(`Error for ${resolution}p:`, error);
+						logger.error(`Stderr for ${resolution}p:`, stderr);
 						reject(error);
 					} else {
-						console.log(`Finished processing ${resolution}p.`);
+						logger.info(`Finished processing ${resolution}p.`);
 						resolve();
 					}
 				});
 			});
 		}
 
-		console.log("All resolutions processed successfully!");
+		logger.info("All resolutions processed successfully!");
 		return outputDir;
 	} catch (err) {
-		console.error("Error creating HLS:", err);
+		logger.error("Error creating HLS:", err);
 		throw err;
 	}
 }

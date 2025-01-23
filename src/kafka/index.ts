@@ -1,7 +1,8 @@
+import { logger } from "../logger/logger";
 import { createTopic } from "./admin";
 import { consumeMessages } from "./consumer";
 
 createTopic().then(() => {
-  console.log("✅ Topic created successfully");
+  logger.info("✅ Topic created successfully");
   consumeMessages()
 });

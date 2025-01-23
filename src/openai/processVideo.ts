@@ -1,21 +1,23 @@
 import prisma from "../prismaClient";
-import { generateTranscript } from "./flask";
+// import { generateTranscript } from "./flask";
 import { generateSummaryAndTitle } from "../gemini/generateSummary";
+import { generateTranscript } from "../huggingface";
+import { logger } from "../logger/logger";
 
 export const processVideo = async (inputVideo: string, videoId: string) => {
 	try {
-		console.log('⚙️ Generating video transcriptions...')
+		logger.info('⚙️ Generating video transcriptions...')
 		const transcription = await generateTranscript(inputVideo);
-		console.log('⚙️ Generating video transcriptions success ✅')
+		logger.info('⚙️ Generating video transcriptions success ✅')
 
 		if (transcription) {
-			console.log('⚙️ Generating summary and title...')
+			logger.info('⚙️ Generating summary and title...')
 			const result = await generateSummaryAndTitle(transcription);
 			if (result) {
-				console.log(result.title); 
-				console.log(result.summary); 
+				logger.info(result.title); 
+				logger.info(result.summary); 
 
-				console.log("✅ Generated Title and Summary:", result);
+				logger.info("✅ Generated Title and Summary:", result);
 
 				await prisma.video.update({
 					where: { id: videoId },
@@ -26,12 +28,12 @@ export const processVideo = async (inputVideo: string, videoId: string) => {
 					},
 				});
 			} else {
-				console.error("🔴 Failed to generate title and summary.");
+				logger.error("🔴 Failed to generate title and summary.");
 			}
 		} else {
-			console.error("🔴 Failed to transcribe audio.");
+			logger.error("🔴 Failed to transcribe audio.");
 		}
 	} catch (error) {
-		console.error("🔴 Error processing video:", error);
+		logger.error("🔴 Error processing video:", error);
 	}
 };

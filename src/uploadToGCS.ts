@@ -4,6 +4,7 @@ import { Storage, StorageOptions } from "@google-cloud/storage";
 import { createHLS, createMasterPlaylist } from "./ffmpeg/transcode";
 import env from "./env";
 import { existsSync } from "fs";
+import { logger } from "./logger/logger";
 
 const BUCKET_NAME = env.GOOGLE_CLOUD_BUCKET_NAME;
 const RESOLUTIONS = [480, 720];
@@ -19,11 +20,11 @@ let storageConfig: StorageOptions = { projectId: GOOGLE_CLOUD_PROJECT_ID };
 if (GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE && existsSync(GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE)) {
     // Use the key file if it exists
     storageConfig.keyFilename = GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE;
-    console.log('Using service account key file for authentication.');
+    logger.info('Using service account key file for authentication.');
 } else if (GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY) {
     // Fall back to inline credentials if the file isn't available
     storageConfig.credentials = JSON.parse(GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY);
-    console.log('Using inline service account credentials for authentication.');
+    logger.info('Using inline service account credentials for authentication.');
 } else {
     throw new Error('Neither GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY_FILE nor GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY is available.');
 }
@@ -52,9 +53,9 @@ export async function createHLSAndUpload(inputPath: string, outputDir: string, g
 		// 4. Cleanup local files (Optional but recommended)
 		// await fs.rm(outputDir, { recursive: true, force: true });
 
-		console.log("🟢 HLS creation and upload complete!");
+		logger.info("🟢 HLS creation and upload complete!");
 	} catch (error) {
-		console.error("🔴 Error processing HLS and upload:", error);
+		logger.error("🔴 Error processing HLS and upload:", error);
 		throw error;
 	}
 }
@@ -66,9 +67,9 @@ export async function uploadDirectoryToGCS(localDir: string, gcsPath: string) {
 		const gcsFilePath = `${gcsPath}/${file}`;
 		try {
 			await bucket.upload(localFilePath, { destination: gcsFilePath });
-			console.log(`🟢 Uploaded ${file} to gs://${BUCKET_NAME}/${gcsFilePath}`);
+			logger.info(`🟢 Uploaded ${file} to gs://${BUCKET_NAME}/${gcsFilePath}`);
 		} catch (error) {
-			console.error(`🔴 Error uploading ${file}:`, error);
+			logger.error(`🔴 Error uploading ${file}:`, error);
 			throw error;
 		}
 	});
