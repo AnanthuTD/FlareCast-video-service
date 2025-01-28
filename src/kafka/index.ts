@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { TOPICS } from "../config/topics";
 import { logger } from "../logger/logger";
 import prisma from "../prismaClient";
@@ -57,12 +58,18 @@ createTopic([TOPICS.VIDEO_EVENTS]).then(() => {
 		logger.info("New video view event received", value);
 
 		try {
+			const video = await prisma.video.findFirst({
+				where: { id: value.videoId },
+			});
+
+			if (!video || video.userId === value.userId) return;
+
 			await prisma.$transaction(async (prisma) => {
 				await prisma.views.create({
 					data: {
 						videoId: value.videoId,
 						userId: value.userId,
-						createdAt: value.createdAt,
+						lastViewed: value.createdAt,
 					},
 				});
 
@@ -83,7 +90,7 @@ createTopic([TOPICS.VIDEO_EVENTS]).then(() => {
 						videoId: value.videoId,
 						userId: value.userId,
 						eventType: NOTIFICATION_EVENT_TYPE.FIRST_VIEW,
-						videoName: "",
+						videoName: video.title || "",
 						viewerName: "",
 						viewerId: value.userId,
 					};
@@ -106,6 +113,16 @@ createTopic([TOPICS.VIDEO_EVENTS]).then(() => {
 
 			// Fallback: Increment totalViews even if uniqueViews fails
 			try {
+				const lastView = await prisma.views.findFirst({
+					where: { videoId: value.videoId, userId: value.userId },
+				});
+
+				const now = dayjs();
+				const lastViewedTime = lastView ? dayjs(lastView.lastViewed) : null;
+
+				// If the user has not viewed the video in the last 24 hours, proceed
+				if (!lastViewedTime || now.diff(lastViewedTime, "hour") < 24) return;
+
 				await prisma.video.update({
 					where: { id: value.videoId },
 					data: {
