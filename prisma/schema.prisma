@@ -14,8 +14,18 @@ model Video {
   createdAt     DateTime @default(now())
   userId        String
   processing    Boolean  @default(true)
-  views         Int      @default(0)
+  totalViews    Int      @default(0)
+  uniqueViews   Int      @default(0)
   summery       String?  @default("")
   transcription String?  @default("")
-  duration      String      @default("0")
+  duration      String   @default("0")
+  Views         Views[]
+}
+
+model Views {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  videoId   String   @db.ObjectId
+  userId    String
+  createdAt DateTime @default(now())
+  Video     Video    @relation(fields: [videoId], references: [id])
 }
