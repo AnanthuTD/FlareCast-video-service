@@ -31,8 +31,8 @@ export const createThumbnails = async (
 				id: gcsPath.split("/").pop(),
 			},
 			data: {
-        duration: videoDuration
-      },
+				duration: videoDuration,
+			},
 		});
 
 		const videoDurationNum = parseFloat(videoDuration);
@@ -83,7 +83,7 @@ function generateVTTFile(
 
 	const timemarks = filenames.map((fileNames, index) => index * 10);
 
-	const thumbnailBaseURL = `${env.GOOGLE_CLOUD_PUBLIC_URL}/${gcsPath
+	const thumbnailBaseURL = `${env.AWS_CLOUDFRONT_URL}/${gcsPath
 		.split("/")
 		.at(-1)}/thumbnails/`;
 
