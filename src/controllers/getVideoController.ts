@@ -15,19 +15,22 @@ export async function getVideos(req: Request, res: Response) {
 		skip: skipNum,
 		take: limitNum,
 		orderBy: { createdAt: "desc" },
+		include: {
+			User: true,
+		},
 	});
 
 	const videosWithThumbnail = videos.map((v) => ({
 		...v,
 		thumbnailUrl: `${env.AWS_CLOUDFRONT_URL}/${v.id}/thumbnails/thumb00001.jpg`,
-		views: v.totalViews,
-		uniqueViews: v.uniqueViews,
+		views: v.totalViews ?? 0,
+		uniqueViews: v.uniqueViews ?? 0,
 		comments: 6,
 		duration: getVideoDurationFormatted(v.duration),
 		shares: 10,
-		userName: "Moksh Garg",
+		userName: v.User?.fullName ?? "Unknown User",
 		timeAgo: getTimeAgo(v.createdAt),
-		userAvatarUrl: "/vercel.svg",
+		userAvatarUrl: v.User?.image ?? null,
 	}));
 
 	const totalCount = await prisma.video.count({ where: { userId: id } });
@@ -40,7 +43,7 @@ function getVideoDurationFormatted(durationInSeconds: string): string {
 	const duration = parseFloat(durationInSeconds);
 	const hours = Math.floor(duration / 3600);
 	const minutes = Math.floor((duration % 3600) / 60);
-	const seconds = duration % 60;
+	const seconds =  Math.round(duration % 60);
 
 	return `${hours > 0 ? `${hours}h ` : ""}${
 		minutes > 0 ? `${minutes}m` : ""
@@ -49,7 +52,7 @@ function getVideoDurationFormatted(durationInSeconds: string): string {
 
 function getTimeAgo(createdAt: Date) {
 	const diff = new Date().getTime() - createdAt.getTime();
-	const seconds = Math.floor(diff / 1000);
+	const seconds = Math.round(Math.floor(diff / 1000));
 	const minutes = Math.floor(seconds / 60);
 	const hours = Math.floor(minutes / 60);
 	const days = Math.floor(hours / 24);

@@ -29,12 +29,15 @@ interface UserVerifiedEvent {
 	userId: string;
 	email: string;
 	firstName: string;
+	lastName: string;
+	image: string;
 }
 
 createTopic([TOPICS.VIDEO_EVENTS]).then(() => {
 	logger.info("✅ Topic created successfully");
+
 	// Consume messages for USER_VERIFIED_EVENT
-	/* consumeMessages(
+	consumeMessages(
 		[TOPICS.USER_VERIFIED_EVENT],
 		async (value: UserVerifiedEvent) => {
 			logger.info("New verified user data received", value);
@@ -42,16 +45,16 @@ createTopic([TOPICS.VIDEO_EVENTS]).then(() => {
 			try {
 				await prisma.user.create({
 					data: {
-						userId: value.userId,
-						email: value.email,
-						username: value.firstName,
+						id: value.userId,
+						fullName: value.firstName + (value.lastName ?? ""),
+						image: value.image ?? "",
 					},
 				});
 			} catch (error) {
 				logger.error("Error creating user:", error);
 			}
 		}
-	); */
+	);
 
 	// Consume messages for VIDEO_VIEW_EVENT
 	consumeMessages([TOPICS.VIDEO_VIEW_EVENT], async (value: VideoViewEvent) => {

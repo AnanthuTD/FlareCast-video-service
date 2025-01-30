@@ -7,12 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id       String  @id @map("_id") @db.ObjectId
+  fullName String
+  image    String  @default("")
+  Video    Video[]
+  Views    Views[]
+}
+
 model Video {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  title         String?  @default("Untilted Video")
+  title         String?  @default("Untitled Video")
   description   String?  @default("No Description")
   createdAt     DateTime @default(now())
-  userId        String
+  userId        String   @db.ObjectId
+  User          User     @relation(fields: [userId], references: [id])
   processing    Boolean  @default(true)
   totalViews    Int      @default(0)
   uniqueViews   Int      @default(0)
@@ -23,9 +32,10 @@ model Video {
 }
 
 model Views {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  videoId   String   @db.ObjectId
-  userId    String
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  videoId    String   @db.ObjectId
+  userId     String   @db.ObjectId
+  User       User     @relation(fields: [userId], references: [id])
   lastViewed DateTime @default(now())
-  Video     Video    @relation(fields: [videoId], references: [id])
+  Video      Video    @relation(fields: [videoId], references: [id])
 }
