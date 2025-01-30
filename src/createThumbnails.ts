@@ -3,7 +3,7 @@ import { fixWebMDuration } from "./fixDuration";
 import { randomUUID } from "crypto";
 import path from "path";
 import fs from "fs";
-import { uploadDirectoryToGCS } from "./uploadToGCS";
+import { uploadDirectoryToS3 } from "./aws/uploadToS3";
 import { logger } from "./logger/logger";
 import env from "./env";
 import prisma from "./prismaClient";
@@ -57,7 +57,7 @@ export const createThumbnails = async (
 				logger.info(
 					"✅ Thumbnails generated successfully.\n⚙️ Now uploading thumbnails to GCS..."
 				);
-				uploadDirectoryToGCS(thumbnailOutputDir, gcsPath + "/thumbnails");
+				uploadDirectoryToS3(thumbnailOutputDir, gcsPath + "/thumbnails");
 			})
 			.on("error", (err) => {
 				logger.error("🔴 Error generating thumbnails:", err);

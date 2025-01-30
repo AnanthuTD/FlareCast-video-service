@@ -6,7 +6,7 @@ import { createWriteStream } from "fs";
 import path from "path";
 import morgan from "morgan";
 import router from "./routes";
-import { createHLSAndUpload } from "./uploadToGCS";
+import { createHLSAndUpload } from "./aws/uploadToS3";
 import env from "./env";
 import prisma from "./prismaClient";
 import fs from "node:fs";
@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("video:chunks", (data: { fileName: string; chunks: Buffer }) => {
-		logger.info(`🟣 Video chunk received for ${data.fileName}`, data);
+		logger.info(`🟣 Video chunk received for ${data.fileName}`);
 
 		// Ensure the upload directory exists
 		const uploadDir = path.join("temp_upload");
@@ -66,7 +66,7 @@ io.on("connection", (socket) => {
 		});
 	});
 
-	socket.on(
+ 	socket.on(
 		"process:video",
 		async (data: { userId: string; fileName: string }) => {
 			// Type for received data
@@ -109,7 +109,7 @@ io.on("connection", (socket) => {
 				logger.error("🔴 prisma video processing failed:", error);
 			}
 		}
-	);
+	); 
 });
 
 app.use((req: Request, res: Response) => {

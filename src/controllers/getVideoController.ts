@@ -19,7 +19,7 @@ export async function getVideos(req: Request, res: Response) {
 
 	const videosWithThumbnail = videos.map((v) => ({
 		...v,
-		thumbnailUrl: `${env.GCS_PUBLIC_URL}/${v.id}/thumbnails/thumb00001.jpg`,
+		thumbnailUrl: `${env.AWS_CLOUDFRONT_URL}/${v.id}/thumbnails/thumb00001.jpg`,
 		views: v.totalViews,
 		uniqueViews: v.uniqueViews,
 		comments: 6,
