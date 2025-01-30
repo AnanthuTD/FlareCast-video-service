@@ -3,6 +3,7 @@ import { getVideos } from "../controllers/getVideoController";
 import { streamVideo } from "../controllers/streamVideo";
 import { getVideoDetails } from "../controllers/getVideoDetails";
 import passport from "passport";
+import { videoViewController } from "../controllers/videoViewController";
 
 const router = express.Router();
 
@@ -14,6 +15,6 @@ router.get("/stream/:file", streamVideo);
 
 router.get("/:videoId/video", getVideoDetails);
 
-router.get("/video/:videoId/viewed");
+router.patch("/video/:videoId/viewed", videoViewController);
 
 export default router;

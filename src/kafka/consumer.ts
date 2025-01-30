@@ -4,41 +4,61 @@ import { TOPICS } from "../config/topics";
 import { KafkaMessage } from "kafkajs";
 
 const consumer = kafka.consumer({
-	groupId: "notification-service",
+  groupId: "video-service",
 });
 
-export async function consumeMessages(
-	topics: TOPICS[],
-	cb: (
-		value: any,
-		topic: string,
-		partition: number,
-		message: KafkaMessage
-	) => void
-) {
-	logger.info("⌛ Consuming messages from topic(s):", topics);
+// Define the type for topic handlers
+type TopicHandler = (
+  value: any,
+  topic: string,
+  partition: number,
+  message: KafkaMessage
+) => void;
 
-	try {
-		await consumer.connect();
-		await consumer.subscribe({ topics });
+// Define the type for the topicHandlers object
+type TopicHandlers = {
+  [key in TOPICS]?: TopicHandler;
+};
 
-		await consumer.run({
-			eachMessage: async ({ topic, partition, message }) => {
-				logger.info({
-					topic,
-					partition,
-					message: message.value?.toString(),
-				});
+export async function consumeMessages(topicHandlers: TopicHandlers) {
+  const topics = Object.keys(topicHandlers) as TOPICS[];
 
-				let { value } = message;
+  logger.info("⌛ Consuming messages from topic(s):", topics);
 
-				if (value) {
-					const parsedValue = JSON.parse(value.toString()) as object;
-					cb(parsedValue, topic, partition, message);
-				}
-			},
-		});
-	} catch (error) {
-		logger.error("🔴 Error consuming messages:", error);
-	}
+  try {
+    // Connect to the Kafka broker
+    await consumer.connect();
+
+    // Subscribe to the specified topics
+    await consumer.subscribe({ topics });
+
+    // Start consuming messages
+    await consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        logger.info({
+          topic,
+          partition,
+          message: message.value?.toString(),
+        });
+
+        let { value } = message;
+
+        if (value) {
+          const parsedValue = JSON.parse(value.toString()) as object;
+
+          // Get the handler for the current topic
+          const handler = topicHandlers[topic as TOPICS];
+
+          if (handler) {
+            // Call the handler for the topic
+            handler(parsedValue, topic, partition, message);
+          } else {
+            logger.warn(`No handler defined for topic: ${topic}`);
+          }
+        }
+      },
+    });
+  } catch (error) {
+    logger.error("🔴 Error consuming messages:", error);
+  }
 }

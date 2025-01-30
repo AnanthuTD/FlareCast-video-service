@@ -38,4 +38,6 @@ model Views {
   User       User     @relation(fields: [userId], references: [id])
   lastViewed DateTime @default(now())
   Video      Video    @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, videoId])
 }
