@@ -66,7 +66,7 @@ io.on("connection", (socket) => {
 		});
 	});
 
- 	socket.on(
+	socket.on(
 		"process:video",
 		async (data: { userId: string; fileName: string }) => {
 			// Type for received data
@@ -89,7 +89,12 @@ io.on("connection", (socket) => {
 
 			try {
 				await createHLSAndUpload(inputVideo, outputDirectory, gcsPath);
-				createThumbnails(inputVideo, path.join(outputDirectory, 'thumbnails'), gcsPath)
+				createThumbnails(
+					inputVideo,
+					path.join(outputDirectory, "thumbnails"),
+					gcsPath,
+					newVideo.id
+				);
 
 				// TODO: Fetch plan from user_service.
 				if (true) await processVideo(inputVideo, newVideo.id);
@@ -109,7 +114,7 @@ io.on("connection", (socket) => {
 				logger.error("🔴 prisma video processing failed:", error);
 			}
 		}
-	); 
+	);
 });
 
 app.use((req: Request, res: Response) => {

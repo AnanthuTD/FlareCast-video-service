@@ -11,7 +11,8 @@ import prisma from "./prismaClient";
 export const createThumbnails = async (
 	videoPath: string,
 	thumbnailOutputDir: string,
-	gcsPath: string
+	gcsPath: string,
+	fileName: string
 ) => {
 	try {
 		const videoDuration = await fixWebMDuration(
@@ -26,14 +27,24 @@ export const createThumbnails = async (
 			return;
 		}
 
-		prisma.video.update({
-			where: {
-				id: gcsPath.split("/").pop(),
-			},
-			data: {
-				duration: videoDuration,
-			},
-		});
+		prisma.video
+			.update({
+				where: {
+					id: fileName,
+				},
+				data: {
+					duration: videoDuration,
+				},
+			})
+			.then(() => {
+				console.log("Updated video duration in DB: ", videoDuration);
+			})
+			.catch((err) =>
+				console.error(
+					`Failed to update video duration in db (${videoDuration})`,
+					err
+				)
+			);
 
 		const videoDurationNum = parseFloat(videoDuration);
 

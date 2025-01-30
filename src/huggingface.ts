@@ -28,8 +28,8 @@ export async function generateTranscript(filePath: string): Promise<object> {
 	return result.text || "";
 }
 
-generateTranscript("./temp_upload/0ae083af-1a02-46ea-9db1-a78bf4d6c9d2-67978c4f.webm")
+/* generateTranscript("./temp_upload/0ae083af-1a02-46ea-9db1-a78bf4d6c9d2-67978c4f.webm")
 	.then((transcript) => {
 		console.log(transcript);
 	})
-	.catch((e) => console.error(e));
+	.catch((e) => console.error(e)); */
