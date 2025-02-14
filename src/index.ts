@@ -6,16 +6,19 @@ import { createWriteStream } from "fs";
 import path from "path";
 import morgan from "morgan";
 import router from "./routes";
-import { createHLSAndUpload } from "./aws/uploadToS3";
 import env from "./env";
-import prisma from "./prismaClient";
 import fs from "node:fs";
-import { processVideo } from "./openai/processVideo";
 import passport from "passport";
 import "./authentication/JwtStrategy";
-import { createThumbnails } from "./createThumbnails";
 import "./kafka";
 import { logger } from "./logger/logger";
+import promClient from "prom-client";
+import { WorkspaceService } from "./services/workspace.service";
+import { VideoRepository } from "./repository/video.repository";
+import { VideoProcessingService } from "./services/videoProcessing.service";
+
+const collectDefaultMetrics = promClient.collectDefaultMetrics;
+collectDefaultMetrics({ register: promClient.register });
 
 const PORT = env.PORT;
 const app = express();
@@ -26,6 +29,12 @@ app.use(morgan("dev"));
 app.use(express.static("hls-output"));
 app.use(passport.initialize());
 app.use("/api", passport.authenticate("jwt", { session: false }), router);
+app.use("/metrics", async (req, res) => {
+	res.setHeader("Content-Type", promClient.register.contentType);
+	const metrics = await promClient.register.metrics();
+	res.send(metrics);
+	// console.log(metrics);
+});
 
 const io = new Server(server, {
 	cors: {
@@ -34,8 +43,6 @@ const io = new Server(server, {
 		credentials: true,
 	},
 });
-
-let recordedChunks: BlobEvent["data"][] = [];
 
 io.on("connection", (socket) => {
 	logger.info(`🟢 Socket connected: ${socket.id}`);
@@ -68,50 +75,41 @@ io.on("connection", (socket) => {
 
 	socket.on(
 		"process:video",
-		async (data: { userId: string; fileName: string }) => {
-			// Type for received data
+		async (data: {
+			userId: string;
+			fileName: string;
+			folderId: string;
+			workspaceId: string;
+		}) => {
 			logger.info("⚙️ Processing video...");
 
-			recordedChunks = [];
-
-			const newVideo = await prisma.video.create({
-				data: {
-					userId: data.userId,
-				},
-			});
-
-			const inputVideo = path.join(process.cwd(), "temp_upload", data.fileName);
-			const outputDirectory = path.join(
-				process.cwd(),
-				`hls-output/${newVideo.id}`
-			);
-			const gcsPath = newVideo.id;
-
 			try {
-				await createHLSAndUpload(inputVideo, outputDirectory, gcsPath);
-				createThumbnails(
-					inputVideo,
-					path.join(outputDirectory, "thumbnails"),
-					gcsPath,
+				// Retrieve workspace
+				const workspaceId = await WorkspaceService.getSelectedWorkspace(
+					data.userId,
+					data.workspaceId,
+					data.folderId
+				);
+
+				// Create video entry in DB
+				const newVideo = await VideoRepository.createVideo(
+					data.userId,
+					workspaceId,
+					data.folderId
+				);
+
+				// Process video
+				await VideoProcessingService.processVideoFile(
+					data.fileName,
 					newVideo.id
 				);
 
-				// TODO: Fetch plan from user_service.
-				if (true) await processVideo(inputVideo, newVideo.id);
-			} catch (error) {
-				logger.error("🔴 HLS processing failed:", error);
-			}
+				// Mark video as processed
+				await VideoRepository.updateProcessingStatus(newVideo.id, false);
 
-			try {
-				await prisma.video.update({
-					where: { id: newVideo.id },
-					data: {
-						processing: false,
-					},
-				});
-				logger.info("✅ prisma video processing completed successfully!");
+				logger.info("✅ Video processing completed successfully!");
 			} catch (error) {
-				logger.error("🔴 prisma video processing failed:", error);
+				logger.error(`🔴 Error processing video: ${(error as Error).message}`);
 			}
 		}
 	);

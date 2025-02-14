@@ -2,16 +2,24 @@ import { Request, Response } from "express";
 import prisma from "../prismaClient";
 import { AuthenticatedRequest } from "../types/types";
 import env from "../env";
+import { Prisma } from "@prisma/client";
 
 export async function getVideos(req: Request, res: Response) {
 	const { id } = (req as AuthenticatedRequest).user;
-	let { skip = "0", limit = "0" } = req.query || {};
+	const { workspaceId } = req.params;
+	let { skip = "0", limit = "0", folderId = "" } = req.query || {};
 
 	const skipNum = Math.max(parseInt(skip as string, 10) || 0, 0);
 	const limitNum = Math.max(parseInt(limit as string, 10) || 10, 1);
 
+	const query: Prisma.VideoWhereInput = {
+		userId: id,
+		workspaceId,
+		folderId: folderId ? (folderId as string) : undefined,
+	};
+
 	const videos = await prisma.video.findMany({
-		where: { userId: id },
+		where: query,
 		skip: skipNum,
 		take: limitNum,
 		orderBy: { createdAt: "desc" },
@@ -43,7 +51,7 @@ function getVideoDurationFormatted(durationInSeconds: string): string {
 	const duration = parseFloat(durationInSeconds);
 	const hours = Math.floor(duration / 3600);
 	const minutes = Math.floor((duration % 3600) / 60);
-	const seconds =  Math.round(duration % 60);
+	const seconds = Math.round(duration % 60);
 
 	return `${hours > 0 ? `${hours}h ` : ""}${
 		minutes > 0 ? `${minutes}m` : ""

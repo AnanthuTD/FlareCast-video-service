@@ -5,6 +5,7 @@ import { KafkaMessage } from "kafkajs";
 
 const consumer = kafka.consumer({
   groupId: "video-service",
+  allowAutoTopicCreation: true,
 });
 
 // Define the type for topic handlers

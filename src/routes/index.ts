@@ -9,12 +9,10 @@ const router = express.Router();
 
 router.use(passport.authenticate("jwt", { session: false }));
 
-router.get("/videos", getVideos);
-
-router.get("/stream/:file", streamVideo);
+router.get("/:workspaceId", getVideos);
 
 router.get("/:videoId/video", getVideoDetails);
 
-router.patch("/video/:videoId/viewed", videoViewController);
+router.patch("/:videoId/viewed", videoViewController);
 
 export default router;
