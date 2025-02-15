@@ -15,7 +15,8 @@ import { logger } from "./logger/logger";
 import promClient from "prom-client";
 import { WorkspaceService } from "./services/workspace.service";
 import { VideoRepository } from "./repository/video.repository";
-import { VideoProcessingService } from "./services/videoProcessing.service";
+import { uploadFileToS3 } from "./aws/uploadToS3";
+import { sendVideoUploadEvent } from "./kafka/handlers/videoUploadEvent.producer";
 
 const collectDefaultMetrics = promClient.collectDefaultMetrics;
 collectDefaultMetrics({ register: promClient.register });
@@ -98,14 +99,20 @@ io.on("connection", (socket) => {
 					data.folderId
 				);
 
-				// Process video
-				await VideoProcessingService.processVideoFile(
-					data.fileName,
-					newVideo.id
+				const inputVideo = path.join(
+					process.cwd(),
+					"temp_upload",
+					data.fileName
 				);
 
-				// Mark video as processed
-				await VideoRepository.updateProcessingStatus(newVideo.id, false);
+				const s3Key = `${newVideo.id}/original.${data.fileName
+					.split(".")
+					.at(-1)}`;
+
+				await uploadFileToS3(inputVideo, s3Key);
+
+				// send event to kafka
+				await sendVideoUploadEvent({ s3Key, videoId: newVideo.id });
 
 				logger.info("✅ Video processing completed successfully!");
 			} catch (error) {

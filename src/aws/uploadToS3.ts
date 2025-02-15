@@ -43,7 +43,7 @@ export async function uploadDirectoryToS3(localDir: string, s3Path: string) {
     await Promise.all(uploadPromises);
 }
 
-async function uploadFileToS3(localFilePath: string, s3Key: string) {
+export async function uploadFileToS3(localFilePath: string, s3Key: string) {
     const fileContent = await fs.readFile(localFilePath);
     
     const params: PutObjectCommandInput = {

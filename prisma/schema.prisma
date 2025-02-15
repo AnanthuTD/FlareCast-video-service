@@ -18,18 +18,24 @@ model User {
 model Video {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   title         String?  @default("Untitled Video")
-  description   String?  @default("No Description")
+  description   String?  @default("No Summery")
   createdAt     DateTime @default(now())
   userId        String   @db.ObjectId
-  processing    Boolean  @default(true)
   totalViews    Int      @default(0)
   uniqueViews   Int      @default(0)
-  summery       String?  @default("")
   transcription String?  @default("")
   duration      String   @default("0")
   folderId      String?  @db.ObjectId
   workspaceId   String   @db.ObjectId
   spaceId       String?  @db.ObjectId
+
+  processing          Boolean @default(true)
+  transcodeStatus     Boolean @default(false)
+  uploaded            Boolean @default(false)
+  thumbnailStatus     Boolean @default(false)
+  transcriptionStatus Boolean @default(false)
+  titleStatus         Boolean @default(false)
+  descriptionStatus   Boolean @default(false)
 
   User  User    @relation(fields: [userId], references: [id])
   Views Views[]
