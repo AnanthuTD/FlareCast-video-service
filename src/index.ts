@@ -29,7 +29,9 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.static("hls-output"));
 app.use(passport.initialize());
-app.use("/api", passport.authenticate("jwt", { session: false }), router);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/api", router);
 app.use("/metrics", async (req, res) => {
 	res.setHeader("Content-Type", promClient.register.contentType);
 	const metrics = await promClient.register.metrics();

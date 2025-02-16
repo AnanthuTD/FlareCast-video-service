@@ -13,7 +13,7 @@ import { handleVideoViewEvent } from "./handlers/videoViewEvent.handler";
 
 
 // Create topics and start consuming messages
-createTopic([TOPICS.VIDEO_EVENTS, TOPICS.VIDEO_VIEW_EVENT]).then(() => {
+createTopic(Object.values(TOPICS)).then(() => {
 	logger.info("✅ Topic created successfully");
 
 	// Define topic handlers

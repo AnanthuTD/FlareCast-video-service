@@ -4,7 +4,7 @@ import { TOPICS } from "../config/topics";
 import { KafkaMessage } from "kafkajs";
 
 const consumer = kafka.consumer({
-  groupId: "video-service",
+  groupId: "video-group",
   allowAutoTopicCreation: true,
 });
 
@@ -23,6 +23,8 @@ type TopicHandlers = {
 
 export async function consumeMessages(topicHandlers: TopicHandlers) {
   const topics = Object.keys(topicHandlers) as TOPICS[];
+
+  console.log(topics)
 
   logger.info("⌛ Consuming messages from topic(s):", topics);
 

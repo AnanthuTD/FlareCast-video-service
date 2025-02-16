@@ -1,11 +1,13 @@
+import { handleVideoStatusUpdateEvent } from "../../controllers/eventController";
 import { logger } from "../../logger/logger";
 import { VideoRepository } from "../../repository/video.repository";
 
 export async function handleThumbnailEvent(value: {
 	videoId: string;
 	status: boolean;
+	userId: string;
 }) {
-  logger.info(
+	logger.info(
 		`⌛ New thumbnail event received, status: ${
 			value.status ? "🟢 success" : "🔴 failed"
 		}`,
@@ -14,20 +16,35 @@ export async function handleThumbnailEvent(value: {
 
 	if (!value.status) {
 		logger.info(
-			"🟡 Skipping thumbnail update for video",
-			+JSON.stringify({ videoId: value.videoId })
+			"🟡 Skipping thumbnail update for video\t" +
+				JSON.stringify({ videoId: value.videoId })
 		);
 		return;
 	}
 
 	try {
 		logger.info(
-			"⌛ Updating title and description for video: " +
-				JSON.stringify(value, null, 2)
+			`⌛ Updating thumbnail status for video: ${JSON.stringify(
+				value,
+				null,
+				2
+			)}`
 		);
+
 		await VideoRepository.updateThumbnailStatus(value.videoId, value.status);
-		logger.info("✅ Title and description updated successfully!");
+
+		await handleVideoStatusUpdateEvent({
+			videoId: value.videoId,
+			status: value.status,
+			message: "Thumbnail processed successfully",
+			event: "thumbnail-update",
+		});
+
+		logger.info("✅ Thumbnail status updated successfully!");
 	} catch (error) {
-		logger.error("🔴 Error updating title and description!", error);
+		logger.error(
+			`🔴 Error updating thumbnail status for video ${value.videoId}`,
+			{ error }
+		);
 	}
 }

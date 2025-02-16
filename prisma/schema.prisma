@@ -30,15 +30,21 @@ model Video {
   spaceId       String?  @db.ObjectId
 
   processing          Boolean @default(true)
-  transcodeStatus     Boolean @default(false)
-  uploaded            Boolean @default(false)
-  thumbnailStatus     Boolean @default(false)
-  transcriptionStatus Boolean @default(false)
-  titleStatus         Boolean @default(false)
-  descriptionStatus   Boolean @default(false)
+  transcodeStatus     VideoStatus @default(PENDING)
+  uploaded            VideoStatus @default(PENDING)
+  thumbnailStatus     VideoStatus @default(PENDING)
+  transcriptionStatus VideoStatus @default(PENDING)
+  titleStatus         VideoStatus @default(PENDING)
+  descriptionStatus   VideoStatus @default(PENDING)
 
   User  User    @relation(fields: [userId], references: [id])
   Views Views[]
+}
+
+enum VideoStatus {
+  SUCCESS
+  FAILED
+  PENDING
 }
 
 model Views {

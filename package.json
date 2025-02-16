@@ -6,7 +6,7 @@
 	"type": "commonjs",
 	"scripts": {
 		"dev": "dotenvx run -- ts-node-dev --rs --transpile-only src/index.ts",
-		"docker:dev": "ts-node-dev --rs --transpile-only src/index.ts",
+		"docker:dev": "ts-node-dev --transpile-only --exit-child --watch src --rs src/index.ts",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"tsc": "npx tsc -p .",
@@ -23,6 +23,7 @@
 		"@google/generative-ai": "^0.21.0",
 		"@prisma/client": "^6.1.0",
 		"axios": "^1.7.9",
+		"compression": "^1.8.0",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.5",
 		"dayjs": "^1.11.13",
@@ -42,6 +43,7 @@
 		"winston-loki": "^6.1.3"
 	},
 	"devDependencies": {
+		"@types/compression": "^1.7.5",
 		"@types/cookie-parser": "^1.4.8",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^5.0.0",

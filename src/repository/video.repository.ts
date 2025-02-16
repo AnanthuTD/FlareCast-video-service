@@ -31,14 +31,22 @@ export class VideoRepository {
 	) {
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { title, description },
+			data: {
+				title,
+				description,
+				titleStatus: title ? "SUCCESS" : "FAILED",
+				descriptionStatus: description ? "SUCCESS" : "FAILED",
+			},
 		});
 	}
 
 	static async updateTranscription(videoId: string, transcription: string) {
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { transcription },
+			data: {
+				transcription,
+				transcriptionStatus: transcription ? "SUCCESS" : "FAILED",
+			},
 		});
 	}
 
@@ -51,14 +59,39 @@ export class VideoRepository {
 	static async updateTranscodeStatus(videoId: string, status: boolean) {
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { transcodeStatus: status },
+			data: { transcodeStatus: status ? "SUCCESS" : "FAILED" },
 		});
 	}
 
 	static async updateThumbnailStatus(videoId: string, status: boolean) {
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { thumbnailStatus: status },
+			data: { thumbnailStatus: status ? "SUCCESS" : "FAILED" },
 		});
+	}
+
+	static async getVideoWorkspaceId(videoId: string) {
+		return await prisma.video.findUnique({
+			where: { id: videoId },
+			select: { workspaceId: true },
+		});
+	}
+
+	static async deleteVideo(videoId: string) {
+    return await prisma.video.delete({ where: { id: videoId } });
+  }
+
+	static async updateTitle(title: string, videoId: string) {
+		return await prisma.video.update({
+      where: { id: videoId },
+      data: { title },
+    });
+	}
+
+	static async updateDescription(description: string, videoId: string) {
+		return await prisma.video.update({
+      where: { id: videoId },
+      data: { description },
+    });
 	}
 }
