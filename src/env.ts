@@ -7,7 +7,6 @@ const env = cleanEnv(process.env, {
 	PORT: port(),
 	DATABASE_URL: url(),
 	ELECTRON_HOST: url(),
-	FFMPEG_LOCATION: str(),
 	COLLABORATION_API_URL: url(),
 	GEMINI_API_KEY: str(),
 	ACCESS_TOKEN_SECRET: str(),
