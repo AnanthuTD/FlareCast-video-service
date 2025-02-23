@@ -7,15 +7,16 @@ import { Prisma } from "@prisma/client";
 export async function getVideos(req: Request, res: Response) {
 	const { id } = (req as AuthenticatedRequest).user;
 	const { workspaceId } = req.params;
-	let { skip = "0", limit = "0", folderId = "" } = req.query || {};
+	let { skip = "0", limit = "0", folderId = "", spaceId = "" } = req.query || {};
 
 	const skipNum = Math.max(parseInt(skip as string, 10) || 0, 0);
 	const limitNum = Math.max(parseInt(limit as string, 10) || 10, 1);
 
 	const query: Prisma.VideoWhereInput = {
-		userId: id,
+		// userId: id,
 		workspaceId,
 		folderId: folderId ? (folderId as string) : undefined,
+		spaceId: folderId ? undefined : spaceId? (spaceId as string) : undefined,
 	};
 
 	const videos = await prisma.video.findMany({

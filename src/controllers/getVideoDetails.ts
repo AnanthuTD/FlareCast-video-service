@@ -9,7 +9,7 @@ export async function getVideoDetails(req: Request, res: Response) {
 	const video = await prisma.video.findFirst({
 		where: {
 			id: videoId,
-			userId: id,
+			// userId: id,
 		},
 	});
 
