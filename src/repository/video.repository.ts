@@ -1,5 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { logger } from "../logger/logger";
+import { VideoSuggestion } from "../types/types";
 
 const prisma = new PrismaClient();
 
@@ -163,42 +164,53 @@ export class VideoRepository {
 	 * Autocomplete. Uses atlas search
 	 * only for title
 	 */
-	static async suggestVideo({
+	static async suggestVideos({
 		query = "",
-		limit = 1,
+		limit = 5,
 		workspaceId = "",
+		paginationToken,
+		direction,
 	}: {
 		query: string;
 		limit: number;
 		workspaceId?: string;
-	}) {
+		direction: "searchAfter" | "searchBefore";
+		paginationToken?: string;
+	}): Promise<VideoSuggestion[]> {
+		if (!query.trim() || !workspaceId) return [];
+
+		const searchStage: any = {
+			$search: {
+				index: "videoTitleDescSearch",
+				compound: {
+					must: [
+						{
+							equals: {
+								path: "workspaceId",
+								value: { $oid: workspaceId },
+							},
+						},
+						{
+							autocomplete: {
+								query,
+								path: "title",
+								tokenOrder: "any",
+								fuzzy: { maxEdits: 1 },
+							},
+						},
+					],
+				},
+			},
+		};
+
+		if (paginationToken) {
+			searchStage.$search[direction] = paginationToken;
+		}
+
 		try {
 			const suggestions = await prisma.video.aggregateRaw({
 				pipeline: [
-					{
-						$search: {
-							index: "videoTitleDescSearch",
-							compound: {
-								must: [
-									{
-										equals: {
-											path: "workspaceId",
-											value: {
-												$oid: workspaceId,
-											},
-										},
-									},
-									{
-										autocomplete: {
-											query: query,
-											path: "title",
-											tokenOrder: "sequential",
-										},
-									},
-								],
-							},
-						},
-					},
+					searchStage,
 					{ $limit: limit },
 					{
 						$lookup: {
@@ -208,9 +220,7 @@ export class VideoRepository {
 							as: "user",
 						},
 					},
-					{
-						$unwind: "$user",
-					},
+					{ $unwind: "$user" },
 					{
 						$project: {
 							title: 1,
@@ -219,17 +229,18 @@ export class VideoRepository {
 							score: { $meta: "searchScore" },
 							user: {
 								id: "$user._id",
-                name: "$user.fullName",
+								name: "$user.fullName",
 							},
+							paginationToken: { $meta: "searchSequenceToken" },
 						},
 					},
 				],
 			});
 
-			return suggestions;
+			return suggestions as unknown as VideoSuggestion[];
 		} catch (error) {
-			logger.error("error while suggesting video", error);
-			return [];
+			logger.error("Error while suggesting video", error);
+			throw new Error("Failed to fetch video suggestions");
 		}
 	}
 }
