@@ -7,13 +7,14 @@ const router = express.Router();
 
 router.use(compression());
 
+router.use('/', protectedRoutes)
+
 router.get("/test/events", handleTestEvents)
 router.get(
 	"/:workspaceId/events",
 	eventsController
 );
 
-router.use('/', protectedRoutes)
 
 
 

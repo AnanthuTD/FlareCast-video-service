@@ -6,7 +6,7 @@
 	"type": "commonjs",
 	"scripts": {
 		"dev": "dotenvx run -- ts-node-dev --rs --transpile-only src/index.ts",
-		"docker:dev": "ts-node-dev --transpile-only --exit-child --watch src --rs src/index.ts",
+		"docker:dev": "ts-node-dev --transpile-only --watch src --rs src/index.ts",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"tsc": "npx tsc -p .",

@@ -17,6 +17,7 @@ import { WorkspaceService } from "./services/workspace.service";
 import { VideoRepository } from "./repository/video.repository";
 import { uploadFileToS3 } from "./aws/uploadToS3";
 import { sendVideoUploadEvent } from "./kafka/handlers/videoUploadEvent.producer";
+import { errorHandler } from "./middleware/errorHandler";
 
 const collectDefaultMetrics = promClient.collectDefaultMetrics;
 collectDefaultMetrics({ register: promClient.register });
@@ -132,11 +133,7 @@ app.use((req: Request, res: Response) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-	logger.error(err.stack);
-	res.status(500).send("Something went wrong!");
-	next();
-});
+app.use(errorHandler);
 
 server.listen(PORT, async () => {
 	logger.info(`🟢 Server is running on port ${PORT}`);
