@@ -32,7 +32,7 @@ router.put("/:videoId/update/description", updateVideoDescription)
 
 
 router.post('/chat', handleChat);
-router.post('/clear-session', handleClearChatHistory);
+router.post('/chat/clear-session', handleClearChatHistory);
 router.get("/chats/:videoId", getChats);
 
 export default router;

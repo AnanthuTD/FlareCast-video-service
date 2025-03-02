@@ -52,10 +52,28 @@ export const handleClearChatHistory = <RequestHandler>(async (req, res) => {
 	} */
 
 	try {
-		await prisma.chat.deleteMany({
-			where: {
-				sessionId,
-			},
+		await prisma.$transaction(async (tx) => {
+			// Step 1: Fetch all chats in the session to identify those with replies
+			const chats = await tx.chat.findMany({
+				where: { sessionId },
+				select: { id: true },
+			});
+
+			const chatIds = chats.map((chat) => chat.id);
+
+			// Step 2: Nullify repliedToId for any chats referencing these
+			await tx.chat.updateMany({
+				where: {
+					repliedToId: { in: chatIds },
+					sessionId,
+				},
+				data: { repliedToId: null }, // Safe because repliedToId is optional
+			});
+
+			// Step 3: Delete all chats in the session
+			await tx.chat.deleteMany({
+				where: { sessionId },
+			});
 		});
 		res.json({ message: `Session ${sessionId} cleared` });
 	} catch (error) {
@@ -96,15 +114,17 @@ export const getChats: RequestHandler = async (req, res) => {
 			: null;
 
 		res.json({
-			chats: resultChats.map((chat) => ({
-				id: chat.id,
-				user: chat.user ?? { fullName: "", id: "ai" },
-				message: chat.message,
-				repliedTo: chat.repliedTo,
-				videoId: chat.videoId,
-				createdAt: chat.createdAt,
-				sessionId: chat.sessionId,
-			})).reverse(),
+			chats: resultChats
+				.map((chat) => ({
+					id: chat.id,
+					user: chat.user ?? { fullName: "", id: "ai" },
+					message: chat.message,
+					repliedTo: chat.repliedTo,
+					videoId: chat.videoId,
+					createdAt: chat.createdAt,
+					sessionId: chat.sessionId,
+				}))
+				.reverse(),
 			nextCursor,
 		});
 	} catch (error) {

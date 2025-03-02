@@ -79,10 +79,10 @@ model Chat {
   userId      String?  @db.ObjectId
   message     String
   repliedToId String?  @db.ObjectId
-  createdAt   DateTime @default(now()) @unique
+  createdAt   DateTime @unique @default(now())
 
   video     Video  @relation(fields: [videoId], references: [id])
-  user      User?   @relation(fields: [userId], references: [id])
+  user      User?  @relation(fields: [userId], references: [id])
   repliedTo Chat?  @relation("ReplyTo", fields: [repliedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies   Chat[] @relation("ReplyTo")
 
