@@ -8,11 +8,13 @@ datasource db {
 }
 
 model User {
-  id       String  @id @map("_id") @db.ObjectId
-  fullName String
-  image    String  @default("")
-  Video    Video[]
-  Views    Views[]
+  id         String       @id @map("_id") @db.ObjectId
+  fullName   String
+  image      String       @default("")
+  Video      Video[]
+  Views      Views[]
+  WatchLater WatchLater[]
+  Chat       Chat[]
 }
 
 model Video {
@@ -29,7 +31,7 @@ model Video {
   workspaceId   String   @db.ObjectId
   spaceId       String?  @db.ObjectId
 
-  processing          Boolean @default(true)
+  processing          Boolean     @default(true)
   transcodeStatus     VideoStatus @default(PENDING)
   uploaded            VideoStatus @default(PENDING)
   thumbnailStatus     VideoStatus @default(PENDING)
@@ -37,8 +39,10 @@ model Video {
   titleStatus         VideoStatus @default(PENDING)
   descriptionStatus   VideoStatus @default(PENDING)
 
-  User  User    @relation(fields: [userId], references: [id])
-  Views Views[]
+  User       User         @relation(fields: [userId], references: [id])
+  Views      Views[]
+  WatchLater WatchLater[]
+  Chat       Chat[]
 }
 
 enum VideoStatus {
@@ -56,4 +60,34 @@ model Views {
   Video      Video    @relation(fields: [videoId], references: [id])
 
   @@unique([userId, videoId])
+}
+
+model WatchLater {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  User        User     @relation(fields: [userId], references: [id])
+  workspaceId String   @unique @db.ObjectId
+  videoIds    String[] @db.ObjectId
+  videos      Video    @relation(fields: [videoIds], references: [id])
+
+  @@unique([userId, workspaceId])
+}
+
+model Chat {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  videoId     String   @db.ObjectId
+  userId      String?  @db.ObjectId
+  message     String
+  repliedToId String?  @db.ObjectId
+  createdAt   DateTime @default(now()) @unique
+
+  video     Video  @relation(fields: [videoId], references: [id])
+  user      User?   @relation(fields: [userId], references: [id])
+  repliedTo Chat?  @relation("ReplyTo", fields: [repliedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Chat[] @relation("ReplyTo")
+
+  sessionId String
+
+  @@unique([createdAt, id])
+  @@index([videoId, createdAt])
 }

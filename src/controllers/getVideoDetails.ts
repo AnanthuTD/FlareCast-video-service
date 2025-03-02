@@ -13,5 +13,19 @@ export async function getVideoDetails(req: Request, res: Response) {
 		},
 	});
 
-	res.json({ video });
+	if (!video) {
+		res.status(404).json({ message: "Video not found", video: null });
+		return;
+	}
+
+	const watchLater = await prisma.watchLater.findFirst({
+		where: {
+			userId: id,
+			workspaceId: video.workspaceId,
+			videoIds: { has: videoId },
+		},
+		select: { id: true },
+	});
+
+	res.json({ video: { ...video, watchLater } });
 }

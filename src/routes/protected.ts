@@ -7,6 +7,8 @@ import { updateVideoTitle } from "../controllers/updateTitle";
 import { updateVideoDescription } from "../controllers/updateDescription";
 import { searchVideosController } from "../controllers/searchVideosController";
 import { autocompleteSearchVideosController } from "../controllers/autocompleteController";
+import { WatchLaterController } from "../controllers/watchlater.controller";
+import { getChats, handleChat, handleClearChatHistory } from "../controllers/aiAgent.controller";
 
 const router = express.Router();
 
@@ -14,6 +16,10 @@ router.use(passport.authenticate("jwt", { session: false }));
 
 router.get("/search", searchVideosController)
 router.get("/search/autocomplete", autocompleteSearchVideosController)
+
+router.post("/watch-later", WatchLaterController.add)
+router.delete('/:videoId/watch-later', WatchLaterController.remove)
+router.get("/watch-later", WatchLaterController.get)
 
 router.get("/:workspaceId", getVideos);
 
@@ -24,5 +30,9 @@ router.patch("/:videoId/viewed", videoViewController);
 router.put("/:videoId/update/title", updateVideoTitle)
 router.put("/:videoId/update/description", updateVideoDescription)
 
+
+router.post('/chat', handleChat);
+router.post('/clear-session', handleClearChatHistory);
+router.get("/chats/:videoId", getChats);
 
 export default router;

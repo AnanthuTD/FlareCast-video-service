@@ -5,50 +5,76 @@ import env from "../env";
 import { Prisma } from "@prisma/client";
 
 export async function getVideos(req: Request, res: Response) {
-	const { id } = (req as AuthenticatedRequest).user;
-	const { workspaceId } = req.params;
-	let { skip = "0", limit = "0", folderId = "", spaceId = "" } = req.query || {};
+	try {
+		const { id } = (req as AuthenticatedRequest).user;
+		const { workspaceId } = req.params;
+		const { skip = "0", limit = "10", folderId = "", spaceId = "" } = req.query;
 
-	const skipNum = Math.max(parseInt(skip as string, 10) || 0, 0);
-	const limitNum = Math.max(parseInt(limit as string, 10) || 10, 1);
+		// Validate workspaceId
+		if (!workspaceId || typeof workspaceId !== "string") {
+			return res.status(400).json({
+				message: "Workspace ID is required as a URL parameter",
+			});
+		}
 
-	const query: Prisma.VideoWhereInput = {
-		// userId: id,
-		workspaceId,
-		folderId: folderId ? (folderId as string) : undefined,
-		spaceId: folderId ? undefined : spaceId? (spaceId as string) : undefined,
-	};
+		// Parse and validate pagination parameters
+		const skipNum = Math.max(parseInt(skip as string, 10) || 0, 0);
+		const limitNum = Math.max(parseInt(limit as string, 10) || 10, 1);
 
-	const videos = await prisma.video.findMany({
-		where: query,
-		skip: skipNum,
-		take: limitNum,
-		orderBy: { createdAt: "desc" },
-		include: {
-			User: true,
-		},
-	});
+		// Build query with conditional filters
+		const query: Prisma.VideoWhereInput = {
+			workspaceId,
+			folderId: folderId ? (folderId as string) : undefined,
+			spaceId: folderId ? undefined : (spaceId as string) || undefined,
+		};
 
-	const videosWithThumbnail = videos.map((v) => ({
-		...v,
-		thumbnailUrl: `${env.AWS_CLOUDFRONT_URL}/${v.id}/thumbnails/thumb00001.jpg`,
-		views: v.totalViews ?? 0,
-		uniqueViews: v.uniqueViews ?? 0,
-		comments: 6,
-		duration: getVideoDurationFormatted(v.duration),
-		shares: 10,
-		userName: v.User?.fullName ?? "Unknown User",
-		timeAgo: getTimeAgo(v.createdAt),
-		userAvatarUrl: v.User?.image ?? null,
-	}));
+		// Fetch videos
+		const videos = await prisma.video.findMany({
+			where: query,
+			skip: skipNum,
+			take: limitNum,
+			orderBy: { createdAt: "desc" },
+			include: { User: true },
+		});
 
-	const totalCount = await prisma.video.count({ where: { userId: id } });
-	const remainingCount = Math.max(totalCount - (skipNum + videos.length), 0);
+		// Enrich video data
+		const videosWithThumbnail = videos.map((v) => ({
+			...v,
+			thumbnailUrl: `${env.AWS_CLOUDFRONT_URL}/${v.id}/thumbnails/thumb00001.jpg`,
+			views: v.totalViews ?? 0,
+			uniqueViews: v.uniqueViews ?? 0,
+			comments: 6, // Replace with actual data if available
+			duration: getVideoDurationFormatted(v.duration),
+			shares: 10, // Replace with actual data if available
+			userName: v.User?.fullName ?? "Unknown User",
+			timeAgo: getTimeAgo(v.createdAt),
+			userAvatarUrl: v.User?.image ?? null,
+		}));
 
-	res.json({ videos: videosWithThumbnail, totalCount, remainingCount });
+		// Calculate pagination metadata
+		const totalCount = await prisma.video.count({ where: query });
+		const totalPages = Math.ceil(totalCount / limitNum);
+		const hasNext = skipNum + videos.length < totalCount;
+		const hasPrev = skipNum > 0;
+
+		// Response
+		return res.status(200).json({
+			videos: videosWithThumbnail,
+			totalCount,
+			page: Math.floor(skipNum / limitNum) + 1,
+			pageSize: limitNum,
+			totalPages,
+			hasNext,
+			hasPrev,
+		});
+	} catch (error) {
+		return res.status(500).json({
+			message: error.message || "Failed to get videos",
+		});
+	}
 }
 
-function getVideoDurationFormatted(durationInSeconds: string): string {
+export function getVideoDurationFormatted(durationInSeconds: string): string {
 	const duration = parseFloat(durationInSeconds);
 	const hours = Math.floor(duration / 3600);
 	const minutes = Math.floor((duration % 3600) / 60);
@@ -59,7 +85,7 @@ function getVideoDurationFormatted(durationInSeconds: string): string {
 	} ${seconds}s`;
 }
 
-function getTimeAgo(createdAt: Date) {
+export function getTimeAgo(createdAt: Date) {
 	const diff = new Date().getTime() - createdAt.getTime();
 	const seconds = Math.round(Math.floor(diff / 1000));
 	const minutes = Math.floor(seconds / 60);
