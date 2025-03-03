@@ -28,6 +28,10 @@ export async function getVideos(req: Request, res: Response) {
 			spaceId: folderId ? undefined : (spaceId as string) || undefined,
 		};
 
+		if (!folderId && !spaceId) {
+			query.userId = id;
+		}
+
 		// Fetch videos
 		const videos = await prisma.video.findMany({
 			where: query,
@@ -48,7 +52,7 @@ export async function getVideos(req: Request, res: Response) {
 			shares: 10, // Replace with actual data if available
 			userName: v.User?.fullName ?? "Unknown User",
 			timeAgo: getTimeAgo(v.createdAt),
-			userAvatarUrl: v.User?.image ?? null,
+			userAvatarUrl: v.User?.image ?? null, 
 		}));
 
 		// Calculate pagination metadata
@@ -73,7 +77,6 @@ export async function getVideos(req: Request, res: Response) {
 		});
 	}
 }
-
 export function getVideoDurationFormatted(durationInSeconds: string): string {
 	const duration = parseFloat(durationInSeconds);
 	const hours = Math.floor(duration / 3600);

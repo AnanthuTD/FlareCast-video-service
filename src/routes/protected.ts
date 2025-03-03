@@ -15,6 +15,7 @@ import {
 } from "../controllers/aiAgent.controller";
 import { VideoEditController } from "../controllers/videoEdit.controller";
 import { videoMoveController, videoShareController } from "../controllers/videoShareController";
+import { deleteVideoController } from "../controllers/deleteVideo.controller";
 
 const router = express.Router();
 
@@ -31,7 +32,7 @@ router.delete("/:videoId/watch-later", WatchLaterController.remove);
 router.get("/watch-later", WatchLaterController.get);
 
 router.get("/:workspaceId", getVideos);
-// router.get("/:spaceId", getVideosForSpace);
+router.delete("/:videoId", deleteVideoController)
 
 router.get("/:videoId/video", getVideoDetails);
 
