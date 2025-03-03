@@ -45,8 +45,10 @@ export const videoShareController: RequestHandler = async (req, res) => {
 	const userId = (req.user as User).id; // Cast req.user to User type
 	const { spaceId = "", folderId = "" } = req.body as VideoShareRequestBody;
 
+	console.log(req.body);
+
 	// Input validation
-	if (!videoId || !spaceId) {
+	if (!videoId) {
 		return res
 			.status(400)
 			.json({ message: "Video ID and Space ID are required" });
@@ -119,6 +121,80 @@ export const videoShareController: RequestHandler = async (req, res) => {
 		// Log successful sharing
 		logger.info(
 			`User ${userId} shared video ${videoId} in space ${spaceId} and folder ${folderId}`
+		);
+
+		return res.status(201).json({ message: "Video shared successfully" });
+	} catch (err) {
+		logger.error(`Failed to share video ${videoId}: ${err.message}`);
+		console.log(err);
+		return res.status(500).json({ message: "Failed to share video" });
+	}
+};
+
+export const videoMoveController: RequestHandler = async (req, res) => {
+	const { videoId } = req.params as { videoId: string };
+	const userId = (req.user as User).id; // Cast req.user to User type
+	const { folderId = "" } = req.body as VideoShareRequestBody;
+
+	console.log(req.body);
+
+	// Input validation
+	if (!videoId) {
+		return res
+			.status(400)
+			.json({ message: "Video ID and Space ID are required" });
+	}
+
+	try {
+		// Check if the video exists in the database
+		const video = (await prisma.video.findUnique({
+			where: { id: videoId },
+		})) as Video | null;
+
+		if (!video) {
+			return res.status(404).json({ message: "Video not found" });
+		}
+
+		if (video.folderId === folderId) {
+			return res
+				.status(400)
+				.json({ message: "Video already shared in this space/folder" });
+		}
+
+		console.log("video : ", video);
+
+		const destination = await checkPermission({
+			userId,
+			destination: { folderId, workspaceId: video.workspaceId },
+			source: {
+				folderId: video.folderId,
+				workspaceId: video.workspaceId,
+			},
+		});
+
+		console.log("destination: ", destination);
+		console.log("sources: ", {
+			folderId: video.folderId,
+			spaceId: video.spaceId,
+			workspaceId: video.workspaceId,
+		});
+
+		if (destination?.permission !== "granted") {
+			return res.status(403).json({
+				message: "User does not have permission to share in this space/folder",
+			});
+		}
+
+		await prisma.video.update({
+			where: { id: videoId },
+			data: {
+				folderId,
+			},
+		});
+
+		// Log successful sharing
+		logger.info(
+			`User ${userId} shared video ${videoId} to folder ${folderId}`
 		);
 
 		return res.status(201).json({ message: "Video shared successfully" });

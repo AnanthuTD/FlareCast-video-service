@@ -14,7 +14,7 @@ import {
 	handleClearChatHistory,
 } from "../controllers/aiAgent.controller";
 import { VideoEditController } from "../controllers/videoEdit.controller";
-import { videoShareController } from "../controllers/videoShareController";
+import { videoMoveController, videoShareController } from "../controllers/videoShareController";
 
 const router = express.Router();
 
@@ -46,5 +46,6 @@ router.get("/chats/:videoId", getChats);
 
 // TODO: not implemented
 router.post("/:videoId/share", videoShareController);
+router.post("/:videoId/move", videoMoveController);
 
 export default router;
