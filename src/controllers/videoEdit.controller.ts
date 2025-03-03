@@ -59,10 +59,23 @@ export class VideoEditController {
 	static onSuccess: RequestHandler = async (req, res) => {
 		console.debug("onSuccess handler");
 		const { videoId } = req.params;
-		const { key } = req.body;
+		const { key, status } = req.body;
 
-		if (!videoId || !key) {
+		if (!videoId || !key || !status) {
 			return res.status(400).json({ error: "Video ID and key are required" });
+		}
+
+		if (status !== "success") {
+			await prisma.video.delete({
+				where: {
+					id: videoId,
+				},
+			});
+			res
+				.status(200)
+				.json({ message: "Video deleted successfully since editing failed!" });
+
+			return;
 		}
 
 		res.json({ message: "Video upload succeeded and is in processing stage" });
