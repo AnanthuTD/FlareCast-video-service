@@ -20,6 +20,7 @@ const router = express.Router();
 router.use(passport.authenticate("jwt", { session: false }));
 
 router.get("/upload-presigned-url", VideoEditController.generatePresignedUrl);
+router.post('/:videoId/edit-success', VideoEditController.onSuccess)
 
 router.get("/search", searchVideosController);
 router.get("/search/autocomplete", autocompleteSearchVideosController);
