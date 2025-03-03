@@ -18,13 +18,15 @@ interface Video {
 
 interface PermissionCheckParams {
 	userId: string;
-	workspaceId: string;
-	spaceId: string;
-	folderId: string;
+	source: { workspaceId: string; spaceId?: string; folderId?: string };
+	destination: { workspaceId: string; spaceId?: string; folderId?: string };
 }
 
 interface PermissionResponse {
 	permission: "granted" | "denied";
+	folderId: string | null;
+	spaceId: string | null;
+	workspaceId: string | null;
 }
 
 interface VideoShareRequestBody {
@@ -66,14 +68,26 @@ export const videoShareController: RequestHandler = async (req, res) => {
 				.json({ message: "Video already shared in this space/folder" });
 		}
 
-		if (
-			!(await checkPermission({
-				folderId,
-				spaceId,
-				userId,
+		console.log("video : ", video);
+
+		const destination = await checkPermission({
+			userId,
+			destination: { folderId, spaceId, workspaceId: video.workspaceId },
+			source: {
+				folderId: video.folderId,
+				spaceId: video.spaceId,
 				workspaceId: video.workspaceId,
-			}))
-		) {
+			},
+		});
+
+		console.log("destination: ", destination);
+		console.log("sources: ", {
+			folderId: video.folderId,
+			spaceId: video.spaceId,
+			workspaceId: video.workspaceId,
+		});
+
+		if (destination?.permission !== "granted") {
 			return res.status(403).json({
 				message: "User does not have permission to share in this space/folder",
 			});
@@ -83,15 +97,24 @@ export const videoShareController: RequestHandler = async (req, res) => {
 		const newVideo = await prisma.video.create({
 			data: {
 				...{ ...video, id: undefined },
-				spaceId: spaceId || undefined,
-				folderId: folderId || undefined,
+				spaceId: destination.spaceId || undefined,
+				folderId: destination.folderId || undefined,
 			},
 			select: {
 				id: true,
 			},
 		});
 
-		await AwsRepository.copyVideo(videoId, newVideo.id);
+		console.log(newVideo);
+
+		AwsRepository.copyVideo(videoId, newVideo.id)
+			.then(() => {
+				logger.info("Copied video s3");
+			})
+			.catch((err) => {
+				logger.error("Failed to copy video s3");
+				console.log(err);
+			});
 
 		// Log successful sharing
 		logger.info(
@@ -101,38 +124,32 @@ export const videoShareController: RequestHandler = async (req, res) => {
 		return res.status(201).json({ message: "Video shared successfully" });
 	} catch (err) {
 		logger.error(`Failed to share video ${videoId}: ${err.message}`);
+		console.log(err);
 		return res.status(500).json({ message: "Failed to share video" });
 	}
 };
 
 async function checkPermission({
 	userId,
-	folderId,
-	spaceId,
-	workspaceId,
-}: PermissionCheckParams): Promise<boolean> {
+	source,
+	destination,
+}: PermissionCheckParams) {
+	console.log(source, destination);
 	try {
 		const { data } = await axios.post<PermissionResponse>(
 			`${env.COLLABORATION_API_URL}/permissions/share-file`,
 			{
 				userId,
-				source: {
-					workspaceId,
-					spaceId,
-					folderId,
-				},
-				destination: {
-					spaceId,
-					folderId,
-				},
+				source,
+				destination,
 			}
 		);
 
-		return data.permission === "granted";
+		return data;
 	} catch (error) {
 		logger.error(
-			`Failed to check permission for sharing video in space ${spaceId} and folder ${folderId}: ${error.response?.data?.message}`
+			`Failed to check permission for sharing video in space ${source.spaceId} and folder ${source.folderId}: ${error.response?.data?.message}`
 		);
-		return false;
+		return null;
 	}
 }
