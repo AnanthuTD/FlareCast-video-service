@@ -14,6 +14,7 @@ import {
 	handleClearChatHistory,
 } from "../controllers/aiAgent.controller";
 import { VideoEditController } from "../controllers/videoEdit.controller";
+import { videoShareController } from "../controllers/videoShareController";
 
 const router = express.Router();
 
@@ -30,6 +31,7 @@ router.delete("/:videoId/watch-later", WatchLaterController.remove);
 router.get("/watch-later", WatchLaterController.get);
 
 router.get("/:workspaceId", getVideos);
+// router.get("/:spaceId", getVideosForSpace);
 
 router.get("/:videoId/video", getVideoDetails);
 
@@ -41,5 +43,8 @@ router.put("/:videoId/update/description", updateVideoDescription);
 router.post("/chat", handleChat);
 router.post("/chat/clear-session", handleClearChatHistory);
 router.get("/chats/:videoId", getChats);
+
+// TODO: not implemented
+router.post("/:videoId/share", videoShareController);
 
 export default router;
