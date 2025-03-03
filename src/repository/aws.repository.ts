@@ -1,7 +1,6 @@
 import s3Client from "../s3";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { CopyObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import {
-	getSignedUrl,
 	S3RequestPresigner,
 } from "@aws-sdk/s3-request-presigner";
 import env from "../env";
@@ -26,5 +25,49 @@ export class AwsRepository {
 			new HttpRequest({ ...url, method: "PUT" })
 		);
 		return formatUrl(signedUrlObject);
+	};
+
+	static copyVideo = async (sourceVideoId: string, newVideoId: string) => {
+		try {
+			// List all objects in the source prefix (e.g., sourceVideoId/)
+			const listResponse = await s3Client.send(
+				new ListObjectsV2Command({
+					Bucket: env.AWS_S3_BUCKET_NAME,
+					Prefix: `${sourceVideoId}/`, 
+				})
+			);
+
+			if (!listResponse.Contents || listResponse.Contents.length === 0) {
+				throw new Error(`No objects found in prefix ${sourceVideoId}/`);
+			}
+
+			// Copy each object to the new prefix (e.g., newVideoId/)
+			for (const object of listResponse.Contents) {
+				if (!object.Key) continue;
+
+				const sourceKey = object.Key;
+				const destinationKey = sourceKey.replace(
+					`${sourceVideoId}/`,
+					`${newVideoId}/`
+				);
+
+				await s3Client.send(
+					new CopyObjectCommand({
+						Bucket: env.AWS_S3_BUCKET_NAME,
+						CopySource: `${env.AWS_S3_BUCKET_NAME}/${encodeURIComponent(
+							sourceKey
+						)}`,
+						Key: destinationKey,
+					})
+				);
+			}
+
+			console.log(
+				`Successfully copied folder ${sourceVideoId}/ to ${newVideoId}/`
+			);
+		} catch (error) {
+			console.error(`Failed to copy folder: ${error.message}`);
+			throw error;
+		}
 	};
 }
