@@ -20,6 +20,7 @@ const env = cleanEnv(process.env, {
 	AWS_ACCESS_KEY_ID: str(),
 	AWS_SECRET_ACCESS_KEY: str(),
 	AWS_S3_BUCKET_NAME: str(),
+	USER_SERVICE_API: url(),
 });
 
 export default env;

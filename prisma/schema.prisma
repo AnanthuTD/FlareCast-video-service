@@ -31,6 +31,8 @@ model Video {
   workspaceId   String   @db.ObjectId
   spaceId       String?  @db.ObjectId
 
+  type                VideoType   @default(VOD)
+  liveStreamStatus    VideoStatus @default(PENDING)
   processing          Boolean     @default(true)
   transcodeStatus     VideoStatus @default(PENDING)
   uploaded            VideoStatus @default(PENDING)
@@ -49,6 +51,12 @@ enum VideoStatus {
   SUCCESS
   FAILED
   PENDING
+  PROCESSING
+}
+
+enum VideoType {
+  LIVE
+  VOD
 }
 
 model Views {

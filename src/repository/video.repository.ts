@@ -1,6 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { logger } from "../logger/logger";
-import { VideoSuggestion } from "../types/types";
+import {
+	AdminDashboardState,
+	VideoStatus,
+	VideoSuggestion,
+} from "../types/types";
 
 const prisma = new PrismaClient();
 
@@ -29,15 +33,16 @@ export class VideoRepository {
 	static async updateTitleAndDescription(
 		videoId: string,
 		title: string,
-		description: string
+		description: string,
+		status: VideoStatus['status']
 	) {
 		return await prisma.video.update({
 			where: { id: videoId },
 			data: {
 				title,
 				description,
-				titleStatus: title ? "SUCCESS" : "FAILED",
-				descriptionStatus: description ? "SUCCESS" : "FAILED",
+				titleStatus: status,
+				descriptionStatus: status,
 			},
 		});
 	}
@@ -58,17 +63,33 @@ export class VideoRepository {
 		});
 	}
 
-	static async updateTranscodeStatus(videoId: string, status: boolean) {
+	static async updateTranscodeStatus(
+		videoId: string,
+		status: VideoStatus["status"]
+	) {
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { transcodeStatus: status ? "SUCCESS" : "FAILED" },
+			data: { transcodeStatus: status },
 		});
 	}
 
-	static async updateThumbnailStatus(videoId: string, status: boolean) {
+	static async updateThumbnailStatus(
+		videoId: string,
+		status: VideoStatus["status"]
+	) {
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { thumbnailStatus: status ? "SUCCESS" : "FAILED" },
+			data: { thumbnailStatus: status },
+		});
+	}
+
+	static async updateLiveStreamStatus(
+		videoId: string,
+		status: VideoStatus["status"]
+	) {
+		return await prisma.video.update({
+			where: { id: videoId },
+			data: { liveStreamStatus: status },
 		});
 	}
 
@@ -243,4 +264,107 @@ export class VideoRepository {
 			throw new Error("Failed to fetch video suggestions");
 		}
 	}
+
+	// Map Prisma VideoStatus to dashboard status
+	static mapVideoStatus = (
+		status: VideoStatus["status"]
+	): "processing" | "success" | "failed" => {
+		switch (status) {
+			case "PROCESSING":
+				return "processing";
+			case "SUCCESS":
+				return "success";
+			case "FAILED":
+				return "failed";
+			default:
+				return "processing"; // Fallback
+		}
+	};
+
+	static getInitialData = async (): Promise<AdminDashboardState> => {
+		try {
+			// Fetch recent videos for processing statuses
+			const recentVideos = await prisma.video.findMany({
+				take: 10, // Limit to recent for performance
+				orderBy: { createdAt: "desc" },
+				select: {
+					id: true,
+					transcodeStatus: true,
+					uploaded: true, // Assuming this is "processed" status
+					thumbnailStatus: true,
+					transcriptionStatus: true,
+					titleStatus: true,
+					descriptionStatus: true,
+					transcription: true,
+					title: true,
+					description: true,
+					duration: true,
+				},
+			});
+
+			// Process video data into dashboard state
+			const transcodingVideos: Record<string, VideoStatus> = {};
+			const processedVideos: Record<string, VideoStatus> = {};
+			const transcriptions: Record<string, VideoStatus> = {};
+			const titleSummaries: Record<string, VideoStatus> = {};
+			const thumbnails: Record<string, VideoStatus> = {};
+
+			recentVideos.forEach((video) => {
+				const videoId = video.id;
+
+				// Transcoding
+				transcodingVideos[videoId] = {
+					videoId,
+					status: video.transcodeStatus,
+				};
+
+				// Processed (uploaded)
+				processedVideos[videoId] = {
+					videoId,
+					status: video.uploaded,
+				};
+
+				// Transcription
+				transcriptions[videoId] = {
+					videoId,
+					status: video.transcriptionStatus,
+					transcription: video.transcription || undefined,
+				};
+
+				// Title and Summary
+				titleSummaries[videoId] = {
+					videoId,
+					status:
+						video.titleStatus && video.descriptionStatus ? "SUCCESS" : "FAILED",
+					title: video.title || undefined,
+					description: video.description || undefined,
+				};
+
+				// Thumbnail
+				thumbnails[videoId] = {
+					videoId,
+					status: video.thumbnailStatus,
+					duration: video.duration || undefined,
+				};
+			});
+
+			return {
+				transcodingVideos,
+				processedVideos,
+				transcriptions,
+				titleSummaries,
+				thumbnails,
+			};
+		} catch (error) {
+			console.error("Error fetching initial data:", error);
+			// Return empty state on error to avoid crashing
+			return {
+				transcodingVideos: {},
+				processedVideos: {},
+				transcriptions: {},
+				titleSummaries: {},
+				thumbnails: {},
+			};
+		}
+	};
 }

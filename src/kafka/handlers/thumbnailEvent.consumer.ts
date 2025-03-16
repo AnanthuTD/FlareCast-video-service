@@ -1,11 +1,14 @@
+import { VideoStatus } from "@prisma/client";
 import { handleVideoStatusUpdateEvent } from "../../controllers/eventController";
 import { logger } from "../../logger/logger";
 import prisma from "../../prismaClient";
 import { VideoRepository } from "../../repository/video.repository";
+import eventEmitter from "../../eventEmitter";
+import EventName from "../../eventEmitter/eventNames";
 
 export async function handleThumbnailEvent(value: {
 	videoId: string;
-	status: boolean;
+	status: VideoStatus;
 	duration: string;
 }) {
 	logger.info(
@@ -32,7 +35,16 @@ export async function handleThumbnailEvent(value: {
 			)}`
 		);
 
-		await VideoRepository.updateThumbnailStatus(value.videoId, value.status);
+		eventEmitter.emit(EventName.THUMBNAIL, {
+			videoId: value.videoId,
+			status: value.status,
+			duration: value.status !== VideoStatus.SUCCESS ? value.duration : undefined,
+		});
+
+		await VideoRepository.updateThumbnailStatus(
+			value.videoId,
+			value.status
+		);
 
 		await handleVideoStatusUpdateEvent({
 			videoId: value.videoId,

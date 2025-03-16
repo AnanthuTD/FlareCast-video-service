@@ -5,6 +5,8 @@ import { sendMessage } from "../producer";
 export async function sendVideoUploadEvent(data: {
 	s3Key: string;
 	videoId: string;
+	userId: string;
+	aiFeature: boolean;
 }) {
 	logger.info(
 		"Sending video upload event to kafka topic: " + TOPICS.VIDEO_UPLOAD_EVENT

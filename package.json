@@ -30,6 +30,7 @@
 		"@smithy/url-parser": "^4.0.1",
 		"axios": "^1.7.9",
 		"compression": "^1.8.0",
+		"cookie": "^1.0.2",
 		"cookie-parser": "^1.4.7",
 		"cors": "^2.8.5",
 		"dayjs": "^1.11.13",

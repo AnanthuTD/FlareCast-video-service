@@ -1,16 +1,22 @@
 import { logger } from "../../logger/logger";
 import { VideoRepository } from "../../repository/video.repository";
-import { videoStatusEventEmitter } from "../../event-emitters/videoStatus.emitter";
 import { handleVideoStatusUpdateEvent } from "../../controllers/eventController";
+import { VideoStatus } from "@prisma/client";
+import eventEmitter from "../../eventEmitter";
+import EventName from "../../eventEmitter/eventNames";
 
 export async function handleTranscriptionEvent(value: {
 	videoId: string;
 	transcription: string;
-	status: boolean;
+	status: VideoStatus;
 }) {
 	logger.info(
 		`⌛ New transcription event received, status: ${
-			value.status ? "🟢 success" : "🔴 failed"
+			value.status === VideoStatus.SUCCESS
+				? "🟢 success"
+				: value.status === VideoStatus.FAILED
+				? "🔴 failed"
+				: "🟡 processing"
 		}`,
 		value
 	);
@@ -24,6 +30,13 @@ export async function handleTranscriptionEvent(value: {
 	}
 
 	try {
+		eventEmitter.emit(EventName.TRANSCRIPTION, {
+			videoId: value.videoId,
+			status: value.status,
+			transcription:
+				value.status === VideoStatus.SUCCESS ? value.transcription : undefined,
+		});
+
 		const video = await VideoRepository.getVideoById(value.videoId);
 		if (!video) {
 			logger.error("🔴 Video not found", { videoId: value.videoId });
@@ -37,7 +50,7 @@ export async function handleTranscriptionEvent(value: {
 
 		await handleVideoStatusUpdateEvent({
 			videoId: value.videoId,
-			status: true,
+			status: value.status,
 			message: "Transcription updated successfully",
 			event: "transcription",
 		});

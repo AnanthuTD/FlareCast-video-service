@@ -10,6 +10,8 @@ export enum TOPICS {
 	THUMBNAIL_EVENT = "thumbnail",
 	VIDEO_TRANSCRIPTION_EVENT = "video.transcription",
 	VIDEO_SUMMARY_TITLE_EVENT = "video.summary.title",
+  VIDEO_REMOVED_EVENT = "video.removed",
+	LIVE_STREAM_EVENT = "live.stream"
 }
 
 export enum NOTIFICATION_EVENT_TYPE {

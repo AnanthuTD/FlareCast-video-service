@@ -60,6 +60,7 @@ export class VideoEditController {
 		console.debug("onSuccess handler");
 		const { videoId } = req.params;
 		const { key, status } = req.body;
+		const userId = req.user.id;
 
 		if (!videoId || !key || !status) {
 			return res.status(400).json({ error: "Video ID and key are required" });
@@ -80,6 +81,10 @@ export class VideoEditController {
 
 		res.json({ message: "Video upload succeeded and is in processing stage" });
 
-		await sendVideoUploadEvent({ s3Key: key, videoId: videoId as string });
+		await sendVideoUploadEvent({
+			s3Key: key,
+			videoId: videoId as string,
+			userId,
+		});
 	};
 }

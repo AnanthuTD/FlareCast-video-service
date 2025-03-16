@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { logger } from "../logger/logger";
 import { VideoRepository } from "../repository/video.repository";
+import { VideoStatus } from "@prisma/client";
 
 const userSockets = new Map<string, Response>();
 
@@ -42,7 +43,7 @@ export default function eventsController(req: Request, res: Response) {
 
 export async function handleVideoStatusUpdateEvent(value: {
 	videoId: string;
-	status: boolean;
+	status: VideoStatus;
 	message: string;
 	event: string;
 }) {
