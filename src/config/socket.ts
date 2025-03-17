@@ -2,8 +2,6 @@ import { Server } from "socket.io";
 import { Server as HttpServer } from "http";
 import { setupVodNamespace } from "../namespaces/vod.namespace";
 import { setupAdminDashboardNamespace } from "../namespaces/adminDashboard.namespace";
-import { parse } from "cookie";
-import env from "../env";
 
 export function initializeSocket(server: HttpServer) {
 	const io = new Server(server, {
