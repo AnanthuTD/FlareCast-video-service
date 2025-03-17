@@ -7,6 +7,8 @@ import "./authentication/JwtStrategy";
 import "./kafka";
 import promClient from "prom-client";
 import { errorHandler } from "./middleware/errorHandler";
+import { tokenExtractorMiddleware } from "./middleware/tokenExtractor.middleware";
+import cookieParser from "cookie-parser";
 
 const collectDefaultMetrics = promClient.collectDefaultMetrics;
 collectDefaultMetrics({ register: promClient.register });
@@ -15,6 +17,8 @@ const app = express();
 
 app.use(cors());
 app.use(morgan("dev"));
+app.use(cookieParser());
+app.use(tokenExtractorMiddleware);
 app.use(express.static("hls-output"));
 app.use(passport.initialize());
 app.use(express.json());
