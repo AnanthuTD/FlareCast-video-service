@@ -22,7 +22,7 @@ export default function eventsController(req: Request, res: Response) {
 
 	userSockets.set(`${userId}:${workspaceId}`, res);
 
-	logger.debug(`✔️ User ${userId} connected to SSE`); 
+	logger.debug(`✔️ User ${userId} connected to SSE`);
 
 	// res.write(`data: ${JSON.stringify({ test: "hi" })}\n\n`);
 	// res.flush(); // 🔥 Force immediate data delivery
@@ -58,7 +58,9 @@ export async function handleVideoStatusUpdateEvent(value: {
 			`${video.userId}:${video.workspaceId}`
 		);
 		if (userResponse) {
-			userResponse.write(`data: ${JSON.stringify(value)}\n\n`);
+			userResponse.write(
+				`data: ${JSON.stringify({ ...value, type: video.type })}\n\n`
+			);
 			logger.info(`✅ Sent update to user ${video.userId}: ${value.message}`);
 		} else {
 			logger.warn(`⚠️ User ${video.userId} not connected to SSE`);
@@ -102,7 +104,7 @@ export async function handleTestEvents(req, res) {
 		comments: 0,
 		shares: 0,
 		thumbnailUrl: "",
-		userAvatarUrl: "", 
+		userAvatarUrl: "",
 		processing: true,
 		transcodeStatus: false,
 		uploaded: false,

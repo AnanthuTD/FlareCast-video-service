@@ -3,23 +3,28 @@ import { logger } from "../../logger/logger";
 import { VideoRepository } from "../../repository/video.repository";
 import eventEmitter from "../../eventEmitter";
 import EventName from "../../eventEmitter/eventNames";
+import { handleVideoStatusUpdateEvent } from "../../controllers/eventController";
 
 export async function handleLiveStreamEvent(value: {
-  videoId: string;
-  status: VideoStatus;
+	videoId: string;
+	status: VideoStatus;
 }) {
-  logger.info(
-    `Live stream event received, status: ${
-      value ? "🟢 success" : "🔴 failed"
-    }`,
-    value
-  );
+	logger.info(
+		`Live stream event received, status: ${value ? "🟢 success" : "🔴 failed"}`,
+		value
+	);
 
-  if (value.status) {
-    eventEmitter.emit(EventName.LIVE_STREAMING, {
+	if (value.status) {
+		eventEmitter.emit(EventName.LIVE_STREAMING, {
 			videoId: value.videoId,
 			status: value.status,
 		});
-    await VideoRepository.updateLiveStreamStatus(value.videoId, value.status);
-  }
+		await VideoRepository.updateLiveStreamStatus(value.videoId, value.status);
+		handleVideoStatusUpdateEvent({
+			videoId: value.videoId,
+			status: value.status,
+			message: "Started live stream",
+			event: "liveStream",
+		});
+	}
 }

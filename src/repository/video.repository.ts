@@ -1,4 +1,8 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import {
+	PrismaClient,
+	VideoStatus as PrismaVideoStatus,
+	VideoType,
+} from "@prisma/client";
 import { logger } from "../logger/logger";
 import {
 	AdminDashboardState,
@@ -34,7 +38,7 @@ export class VideoRepository {
 		videoId: string,
 		title: string,
 		description: string,
-		status: VideoStatus['status']
+		status: VideoStatus["status"]
 	) {
 		return await prisma.video.update({
 			where: { id: videoId },
@@ -87,9 +91,15 @@ export class VideoRepository {
 		videoId: string,
 		status: VideoStatus["status"]
 	) {
+		let data = { liveStreamStatus: status };
+		if (status === "SUCCESS") {
+			data.type = VideoType.VOD;
+			data.transcodeStatus = PrismaVideoStatus.SUCCESS;
+		}
+
 		return await prisma.video.update({
 			where: { id: videoId },
-			data: { liveStreamStatus: status },
+			data,
 		});
 	}
 
