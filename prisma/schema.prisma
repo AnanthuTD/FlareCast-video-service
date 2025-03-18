@@ -22,13 +22,13 @@ model Video {
   title         String?       @default("Untitled Video")
   description   String?       @default("No Summery")
   createdAt     DateTime      @default(now())
-  userId        String        @db.ObjectId
+  userId        String?       @db.ObjectId
   totalViews    Int           @default(0)
   uniqueViews   Int           @default(0)
   transcription String?       @default("")
   duration      String        @default("0")
   folderId      String?       @db.ObjectId
-  workspaceId   String?        @db.ObjectId
+  workspaceId   String?       @db.ObjectId
   spaceId       String?       @db.ObjectId
   category      VideoCategory @default(DEFAULT)
 
@@ -42,7 +42,7 @@ model Video {
   titleStatus         VideoStatus @default(PENDING)
   descriptionStatus   VideoStatus @default(PENDING)
 
-  User       User?         @relation(fields: [userId], references: [id])
+  User       User?        @relation(fields: [userId], references: [id])
   Views      Views[]
   WatchLater WatchLater[]
   Chat       Chat[]
