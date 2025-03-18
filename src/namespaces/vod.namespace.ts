@@ -6,99 +6,132 @@ import { VideoRepository } from "../repository/video.repository";
 import path from "node:path";
 import { uploadFileToS3 } from "../aws/uploadToS3";
 import { sendVideoUploadEvent } from "../kafka/handlers/videoUploadEvent.producer";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import { authenticateWebsocketUser } from "../middleware/socketAuth.middleware";
 
 export const setupVodNamespace = (namespace: Namespace) => {
 	namespace.use(authenticateWebsocketUser);
 
-  namespace.on("connection", (socket: Socket) => {
-    logger.info(`🟢 Socket connected: ${socket.id}`);
-  })
+	namespace.on("connection", (socket: Socket) => {
+		logger.info(`🟢 Socket connected: ${socket.id}`);
 
-	namespace.on("disconnect", (socket: Socket) => {
-		logger.info(`🔴 Socket disconnected: ${socket.id}`);
-	});
-
-	namespace.on("video:chunks", (data: { fileName: string; chunks: Buffer }) => {
-		logger.info(`🟣 Video chunk received for ${data.fileName}`);
-
-		// Ensure the upload directory exists
-		const uploadDir = path.join("temp_upload");
-		if (!fs.existsSync(uploadDir)) {
-			fs.mkdirSync(uploadDir, { recursive: true });
-		}
-
-		const writeStream = fs.createWriteStream(path.join(uploadDir, data.fileName), {
-			flags: "a",
+		socket.on("disconnect", () => {
+			logger.info(`🔴 Socket disconnected: ${socket.id}`);
 		});
 
-		writeStream.write(data.chunks, (err) => {
-			if (err) {
-				logger.error("Error writing chunk to file:", err);
-			} else {
-				logger.info("Chunk written successfully!");
-			}
-		});
-	});
+		socket.on(
+			"video:chunks",
+			async (
+				data: { fileName: string; chunks: Buffer },
+				callback?: (response: { success: boolean; error?: string }) => void
+			) => {
+				try {
+					logger.info(`🟣 Video chunk received for ${data.fileName}`);
+					const uploadDir = path.join(process.cwd(), "temp_upload");
+					await fs.mkdir(uploadDir, { recursive: true });
+					const filePath = path.join(uploadDir, data.fileName);
 
-	namespace.on(
-		"process:video",
-		async (data: {
-			userId: string;
-			fileName: string;
-			folderId: string;
-			workspaceId: string;
-		}) => {
-			logger.info("⚙️ Processing video...");
+					await fs.appendFile(filePath, data.chunks);
+					logger.info("Chunk written successfully!");
 
-			try {
-				const subscriptionLimits = await SubscriptionRepository.getLimits(
-					"67a372a0be2e27143ea646b6"
-				);
-
-				if (subscriptionLimits.permission !== "granted") {
-					return;
+					if (callback) {
+						callback({ success: true });
+					}
+				} catch (err) {
+					logger.error("Error writing chunk to file:", err);
+					if (callback) {
+						callback({ success: false, error: (err as Error).message });
+					}
 				}
-
-				// Retrieve workspace
-				const workspaceId = await WorkspaceService.getSelectedWorkspace(
-					data.userId,
-					data.workspaceId,
-					data.folderId
-				);
-
-				// Create video entry in DB
-				const newVideo = await VideoRepository.createVideo(
-					data.userId,
-					workspaceId,
-					data.folderId
-				);
-
-				const inputVideo = path.join(
-					process.cwd(),
-					"temp_upload",
-					data.fileName
-				);
-
-				const s3Key = `${newVideo.id}/original.${data.fileName
-					.split(".")
-					.at(-1)}`;
-
-				await uploadFileToS3(inputVideo, s3Key);
-
-				// send event to kafka
-				await sendVideoUploadEvent({
-					s3Key,
-					videoId: newVideo.id,
-					userId: data.userId,
-					aiFeature: subscriptionLimits.aiFeature,
-				});
-
-				logger.info("✅ Video processing completed successfully!");
-			} catch (error) {
-				logger.error(`🔴 Error processing video: ${(error as Error).message}`);
 			}
-		}
-	);
+		);
+
+		socket.on(
+			"process:video",
+			async (
+				data: {
+					userId: string;
+					fileName: string;
+					folderId: string;
+					workspaceId: string;
+				},
+				callback?: (response: {
+					success: boolean;
+					videoId?: string;
+					error?: string;
+				}) => void
+			) => {
+				logger.info("⚙️ Processing video...");
+				try {
+					const subscriptionLimits = await SubscriptionRepository.getLimits(
+						data.userId
+					);
+					if (subscriptionLimits.permission !== "granted") {
+						socket.emit("process:video:error", {
+							message: "Subscription limits not granted",
+						});
+						if (callback) {
+							callback({
+								success: false,
+								error: "Subscription limits not granted",
+							});
+						}
+						return;
+					}
+
+					const workspaceId = await WorkspaceService.getSelectedWorkspace(
+						data.userId,
+						data.workspaceId,
+						data.folderId
+					);
+
+					const newVideo = await VideoRepository.createVideo(
+						data.userId,
+						workspaceId,
+						data.folderId
+					);
+
+					const inputVideo = path.join(
+						process.cwd(),
+						"temp_upload",
+						data.fileName
+					);
+					const s3Key = `${newVideo.id}/original.${data.fileName
+						.split(".")
+						.pop()}`;
+
+					await uploadFileToS3(inputVideo, s3Key);
+
+					await sendVideoUploadEvent({
+						s3Key,
+						videoId: newVideo.id,
+						userId: data.userId,
+						aiFeature: subscriptionLimits.aiFeature,
+					});
+
+					await fs
+						.unlink(inputVideo)
+						.catch((err) =>
+							logger.warn(`Failed to delete temp file ${inputVideo}:`, err)
+						);
+
+					logger.info("✅ Video processing completed successfully!");
+					socket.emit("process:video:success", { videoId: newVideo.id });
+					if (callback) {
+						callback({ success: true, videoId: newVideo.id });
+					}
+				} catch (error) {
+					logger.error(
+						`🔴 Error processing video: ${(error as Error).message}`
+					);
+					socket.emit("process:video:error", {
+						message: (error as Error).message,
+					});
+					if (callback) {
+						callback({ success: false, error: (error as Error).message });
+					}
+				}
+			}
+		);
+	});
 };

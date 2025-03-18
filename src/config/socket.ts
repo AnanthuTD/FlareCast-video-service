@@ -22,16 +22,6 @@ export function initializeSocket(server: HttpServer) {
 		});
 	});
 
-/* 	io.engine.on("headers", (headers, request) => {
-		console.log(request.headers)
-		const cookies = parse(request.headers.cookie);
-		console.log(cookies)
-	
-	}); */
-
-	// Apply authentication middleware to all connections
-	// io.use(socketAuthMiddleware);
-
 	// Define namespaces
 	const vodNamespace = io.of("/");
 	const adminDashboardNamespace = io.of("/admin-dashboard");
