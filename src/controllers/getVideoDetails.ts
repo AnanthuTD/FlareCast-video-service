@@ -21,7 +21,7 @@ export async function getVideoDetails(req: Request, res: Response) {
 	const watchLater = await prisma.watchLater.findFirst({
 		where: {
 			userId: id,
-			workspaceId: video.workspaceId,
+			workspaceId: video.workspaceId ?? undefined,
 			videoIds: { has: videoId },
 		},
 		select: { id: true },

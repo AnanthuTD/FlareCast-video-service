@@ -43,8 +43,8 @@ export class VideoRepository {
 		return await prisma.video.update({
 			where: { id: videoId },
 			data: {
-				title,
-				description,
+				...(title ? { title } : {}),
+				...(description ? { description } : {}),
 				titleStatus: status,
 				descriptionStatus: status,
 			},
