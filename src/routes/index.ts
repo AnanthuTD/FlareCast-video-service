@@ -13,7 +13,7 @@ router.use(compression());
 
 router.use('/interservice', interserviceRoutes)
 router.get("/test/events", handleTestEvents);
-router.get("/:workspaceId/events", eventsController);
+
 
 router.get("/:videoId/preview", getPreviewVideoDetails);
 

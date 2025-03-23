@@ -12,7 +12,7 @@ export default function eventsController(req: Request, res: Response) {
 	res.setHeader("X-Accel-Buffering", "no"); // 🔥 Critical for Nginx
 	res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ Add CORS if needed
 
-	const userId = req.query.userId;
+	const userId = req.user.id;
 	const { workspaceId } = req.params;
 
 	if (!userId) {
