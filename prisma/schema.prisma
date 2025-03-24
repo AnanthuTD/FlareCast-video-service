@@ -42,6 +42,8 @@ model Video {
   titleStatus         VideoStatus @default(PENDING)
   descriptionStatus   VideoStatus @default(PENDING)
 
+  isPublic Boolean @default(false)
+
   User       User?        @relation(fields: [userId], references: [id])
   Views      Views[]
   WatchLater WatchLater[]

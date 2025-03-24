@@ -22,11 +22,13 @@ import { deleteVideoController } from "../controllers/deleteVideo.controller";
 import { getLiveStreamToken } from "../controllers/liveStream.controller";
 import { getPromotionalVideos } from "../controllers/getPromotionalVideo.controller";
 import eventsController from "../controllers/eventController";
+import { visibilityController } from "../controllers/visibility.controller";
 
 const router = express.Router();
 
 router.use(passport.authenticate("jwt", { session: false }));
 
+router.patch("/:videoId/visibility", visibilityController);
 router.get("/:workspaceId/events", eventsController);
 router.get("/stream-key", getLiveStreamToken);
 router.get("/upload-presigned-url", VideoEditController.generatePresignedUrl);
