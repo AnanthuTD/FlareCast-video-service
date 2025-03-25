@@ -4,13 +4,24 @@ import { VideoType } from "@prisma/client";
 import { WorkspaceService } from "../services/workspace.service";
 import jwt from "jsonwebtoken";
 import env from "../env";
+import { logger } from "../logger/logger";
 
 export const getLiveStreamToken: RequestHandler = async (req, res) => {
 	const userId = req.user.id;
+	const workspaceId = req.query.workspaceId;
+	const folderId = req.query.folderId;
+	const spaceId = req.query.spaceId;
+
+	logger.debug("generating live stream token")
 
 	try {
-		const workspaceId = await WorkspaceService.getSelectedWorkspace(userId);
-		if (!workspaceId) {
+		const selectedData = await WorkspaceService.getSelectedWorkspace(
+			userId,
+			workspaceId,
+			folderId,
+			spaceId
+		);
+		if (!selectedData.selectedWorkspace) {
 			res.status(404).json({ error: "No workspace selected" });
 			return;
 		}
@@ -18,8 +29,11 @@ export const getLiveStreamToken: RequestHandler = async (req, res) => {
 		const newLiveStream = await prisma.video.create({
 			data: {
 				type: VideoType.LIVE,
-				workspaceId,
+				workspaceId: selectedData.selectedWorkspace || undefined,
+				folderId: selectedData.selectedFolder || undefined,
+				spaceId: selectedData.selectedSpace || undefined,
 				userId,
+				transcodeStatus: 'SUCCESS',
 			},
 		});
 

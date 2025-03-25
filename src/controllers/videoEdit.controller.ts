@@ -30,8 +30,8 @@ export class VideoEditController {
 				data: {
 					title: `edited-${video.title}`,
 					userId: video.userId,
-					workspaceId: video.workspaceId,
-					folderId: video.folderId,
+					workspaceId: video.workspaceId || undefined,
+					folderId: video.folderId || undefined,
 				},
 			});
 

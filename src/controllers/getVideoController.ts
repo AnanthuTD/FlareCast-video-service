@@ -17,17 +17,32 @@ export async function getVideos(req: Request, res: Response) {
 			});
 		}
 
-		// Parse and validate pagination parameters
 		const skipNum = Math.max(parseInt(skip as string, 10) || 0, 0);
 		const limitNum = Math.max(parseInt(limit as string, 10) || 10, 1);
 
-		// Build query with conditional filters
 		const query: Prisma.VideoWhereInput = {
 			workspaceId,
-			folderId: folderId ? (folderId as string) : undefined,
-			spaceId: folderId ? undefined : (spaceId as string) || undefined,
 		};
 
+		// If folderId is provided, filter by folderId; otherwise, filter for no folderId or null
+		if (folderId) {
+			query.folderId = folderId as string;
+		} else {
+			query.folderId = {
+				isSet: false,
+			};
+		}
+
+		// If spaceId is provided, filter by spaceId; otherwise, filter for no spaceId or null
+		if (spaceId) {
+			query.spaceId = spaceId as string;
+		} else {
+			query.spaceId = {
+				isSet: false, // Field does not exist
+			};
+		}
+
+		// If neither folderId nor spaceId is provided, filter by userId
 		if (!folderId && !spaceId) {
 			query.userId = id;
 		}
@@ -52,7 +67,7 @@ export async function getVideos(req: Request, res: Response) {
 			shares: 10, // Replace with actual data if available
 			userName: v.User?.fullName ?? "Unknown User",
 			timeAgo: getTimeAgo(v.createdAt),
-			userAvatarUrl: v.User?.image ?? null, 
+			userAvatarUrl: v.User?.image ?? null,
 		}));
 
 		// Calculate pagination metadata
@@ -72,6 +87,7 @@ export async function getVideos(req: Request, res: Response) {
 			hasPrev,
 		});
 	} catch (error) {
+		console.error(error);
 		return res.status(500).json({
 			message: error.message || "Failed to get videos",
 		});

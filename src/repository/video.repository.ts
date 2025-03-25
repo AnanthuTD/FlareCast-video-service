@@ -16,13 +16,15 @@ export class VideoRepository {
 	static async createVideo(
 		userId: string,
 		workspaceId: string,
-		folderId: string
+		folderId?: string,
+		spaceId?: string
 	) {
 		return await prisma.video.create({
 			data: {
 				userId,
-				workspaceId,
-				folderId,
+				workspaceId: workspaceId || undefined,
+				folderId: folderId || undefined,
+				spaceId: spaceId || undefined,
 			},
 		});
 	}

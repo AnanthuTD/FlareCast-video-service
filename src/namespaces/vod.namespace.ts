@@ -52,8 +52,11 @@ export const setupVodNamespace = (namespace: Namespace) => {
 				data: {
 					userId: string;
 					fileName: string;
-					folderId: string;
-					workspaceId: string;
+					preset: {
+						folderId: string;
+						workspaceId: string;
+						spaceId: string;
+					};
 				},
 				callback?: (response: {
 					success: boolean;
@@ -62,6 +65,7 @@ export const setupVodNamespace = (namespace: Namespace) => {
 				}) => void
 			) => {
 				logger.info("⚙️ Processing video...");
+				console.log("preset: ", data.preset)
 				try {
 					const subscriptionLimits = await SubscriptionRepository.getLimits(
 						data.userId
@@ -79,16 +83,18 @@ export const setupVodNamespace = (namespace: Namespace) => {
 						return;
 					}
 
-					const workspaceId = await WorkspaceService.getSelectedWorkspace(
+					const selectedData = await WorkspaceService.getSelectedWorkspace(
 						data.userId,
-						data.workspaceId,
-						data.folderId
+						data.preset.workspaceId,
+						data.preset.folderId,
+						data.preset.spaceId
 					);
 
 					const newVideo = await VideoRepository.createVideo(
 						data.userId,
-						workspaceId,
-						data.folderId
+						 selectedData.selectedWorkspace,
+						 selectedData.selectedFolder,
+             selectedData.selectedSpace,
 					);
 
 					const inputVideo = path.join(

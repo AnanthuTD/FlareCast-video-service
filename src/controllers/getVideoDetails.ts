@@ -33,87 +33,96 @@ collaborationServiceBreaker.on("close", () =>
 );
 
 export async function getVideoDetails(req: Request, res: Response) {
-	const { id } = (req as AuthenticatedRequest).user;
-	const { videoId } = req.params;
+	try {
+		const { id } = (req as AuthenticatedRequest).user;
+		const { videoId } = req.params;
 
-	const video = await prisma.video.findFirst({
-		where: {
-			id: videoId,
-			// userId: id,
-		},
-	});
+		const video = await prisma.video.findFirst({
+			where: {
+				id: videoId,
+				// userId: id,
+			},
+		});
 
-	if (!video) {
-		res.status(404).json({ message: "Video not found", video: null });
-		return;
-	}
-
-	if (!video.isPublic && video.userId !== id) {
-		if (!video.spaceId) {
-			logger.debug("Video is not public and user is not the owner");
-			res
-				.status(403)
-				.json({ message: "User don't have access rights to this video" });
+		if (!video) {
+			res.status(404).json({ message: "Video not found", video: null });
 			return;
 		}
 
-		// Use Circuit Breaker with retries
-		const maxRetries = 3;
-		let lastError: any;
+		if (!video.isPublic && video.userId !== id) {
+			if (!video.spaceId) {
+				logger.debug("Video is not public and user is not the owner");
+				res
+					.status(403)
+					.json({ message: "User don't have access rights to this video" });
+				return;
+			}
 
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			try {
-				const data = await collaborationServiceBreaker.fire(video.spaceId, id);
+			// Use Circuit Breaker with retries
+			const maxRetries = 3;
+			let lastError: any;
 
-				if (!data.isMember) {
-					logger.debug("User is not a member of the space and has permission");
-					res
-						.status(403)
-						.json({ message: "User don't have access rights to this video" });
-					return;
+			for (let attempt = 0; attempt < maxRetries; attempt++) {
+				try {
+					const data = await collaborationServiceBreaker.fire(
+						video.spaceId,
+						id
+					);
+
+					if (!data.isMember) {
+						logger.debug(
+							"User is not a member of the space and has permission"
+						);
+						res
+							.status(403)
+							.json({ message: "User don't have access rights to this video" });
+						return;
+					}
+					break; // Success, exit retry loop
+				} catch (err) {
+					lastError = err;
+					logger.warn(
+						`Attempt ${
+							attempt + 1
+						} failed checking permission for user ${id} in space ${
+							video.spaceId
+						}: ${err instanceof Error ? err.message : err}`
+					);
+
+					// Don't delay on the last attempt
+					if (attempt < maxRetries - 1) {
+						await new Promise((resolve) =>
+							setTimeout(resolve, 1000 * Math.pow(2, attempt))
+						);
+					}
 				}
-				break; // Success, exit retry loop
-			} catch (err) {
-				lastError = err;
-				logger.warn(
-					`Attempt ${
-						attempt + 1
-					} failed checking permission for user ${id} in space ${
-						video.spaceId
-					}: ${err instanceof Error ? err.message : err}`
+			}
+
+			// All retries failed or circuit is open
+			if (lastError) {
+				logger.error(
+					`Failed to check user permission after ${maxRetries} attempts: ${
+						lastError instanceof Error ? lastError.message : lastError
+					}`
 				);
-
-				// Don't delay on the last attempt
-				if (attempt < maxRetries - 1) {
-					await new Promise((resolve) =>
-						setTimeout(resolve, 1000 * Math.pow(2, attempt))
-					); 
-				}
+				res.status(500).json({ message: "Failed to check user permission" });
+				return;
 			}
 		}
 
-		// All retries failed or circuit is open
-		if (lastError) {
-			logger.error(
-				`Failed to check user permission after ${maxRetries} attempts: ${
-					lastError instanceof Error ? lastError.message : lastError
-				}`
-			);
-			res.status(500).json({ message: "Failed to check user permission" });
-			return;
-		}
+		const watchLater = await prisma.watchLater.findFirst({
+			where: {
+				userId: id,
+				workspaceId: video.workspaceId ?? undefined,
+				videoIds: { has: videoId },
+			},
+			select: { id: true },
+		});
+
+		res.json({ video: { ...video, watchLater } });
+	} catch (error) {
+		console.error(error);
 	}
-
-	const watchLater = await prisma.watchLater.findFirst({
-		where: {
-			userId: id,
-			workspaceId: video.workspaceId ?? undefined,
-			videoIds: { has: videoId },
-		},
-		select: { id: true },
-	});
-
-	res.json({ video: { ...video, watchLater } });
 }
 
 export async function getPreviewVideoDetails(req: Request, res: Response) {

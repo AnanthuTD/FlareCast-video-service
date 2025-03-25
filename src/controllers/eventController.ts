@@ -59,7 +59,13 @@ export async function handleVideoStatusUpdateEvent(value: {
 		);
 		if (userResponse) {
 			userResponse.write(
-				`data: ${JSON.stringify({ ...value, type: video.type })}\n\n`
+				`data: ${JSON.stringify({
+					...value,
+					type: video.type,
+					folderId: video.folderId,
+					workspaceId: video.workspaceId,
+					spaceId: video.spaceId,
+				})}\n\n`
 			);
 			logger.info(`✅ Sent update to user ${video.userId}: ${value.message}`);
 		} else {
