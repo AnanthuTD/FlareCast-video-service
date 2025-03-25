@@ -4,6 +4,33 @@ import { AuthenticatedRequest } from "../types/types";
 import env from "../env";
 import axios from "axios";
 import { logger } from "../logger/logger";
+import CircuitBreaker from "opossum";
+
+const collaborationServiceBreaker = new CircuitBreaker(
+	async (spaceId: string, userId: string) => {
+		const { data } = await axios.get(
+			`${env.COLLABORATION_API_URL}/permissions/${spaceId}/space/${userId}/isMember`,
+			{ timeout: 2000 } // 2-second timeout per request
+		);
+		return data;
+	},
+	{
+		timeout: 2000, // Timeout after 2 seconds
+		errorThresholdPercentage: 50, // Trip if 50% of requests fail
+		resetTimeout: 30000, // Retry after 30 seconds
+	}
+);
+
+// Log state changes
+collaborationServiceBreaker.on("open", () =>
+	logger.warn("Circuit opened for collaboration service")
+);
+collaborationServiceBreaker.on("halfOpen", () =>
+	logger.info("Circuit half-open for collaboration service")
+);
+collaborationServiceBreaker.on("close", () =>
+	logger.info("Circuit closed for collaboration service")
+);
 
 export async function getVideoDetails(req: Request, res: Response) {
 	const { id } = (req as AuthenticatedRequest).user;
@@ -29,20 +56,49 @@ export async function getVideoDetails(req: Request, res: Response) {
 				.json({ message: "User don't have access rights to this video" });
 			return;
 		}
-		try {
-			const { data } = await axios.get(
-				`${env.COLLABORATION_API_URL}/permissions/${video.spaceId}/space/${id}/isMember`
-			);
 
-			if (!data.isMember) {
-				logger.debug("User is not a member of the space and has permission");
-				res
-					.status(403)
-					.json({ message: "User don't have access rights to this video" });
+		// Use Circuit Breaker with retries
+		const maxRetries = 3;
+		let lastError: any;
+
+		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			try {
+				const data = await collaborationServiceBreaker.fire(video.spaceId, id);
+
+				if (!data.isMember) {
+					logger.debug("User is not a member of the space and has permission");
+					res
+						.status(403)
+						.json({ message: "User don't have access rights to this video" });
+					return;
+				}
+				break; // Success, exit retry loop
+			} catch (err) {
+				lastError = err;
+				logger.warn(
+					`Attempt ${
+						attempt + 1
+					} failed checking permission for user ${id} in space ${
+						video.spaceId
+					}: ${err instanceof Error ? err.message : err}`
+				);
+
+				// Don't delay on the last attempt
+				if (attempt < maxRetries - 1) {
+					await new Promise((resolve) =>
+						setTimeout(resolve, 1000 * Math.pow(2, attempt))
+					); 
+				}
 			}
-		} catch (err) {
-			logger.error(`Error checking user permission: ${err?.response?.message}`);
-			console.log(err);
+		}
+
+		// All retries failed or circuit is open
+		if (lastError) {
+			logger.error(
+				`Failed to check user permission after ${maxRetries} attempts: ${
+					lastError instanceof Error ? lastError.message : lastError
+				}`
+			);
 			res.status(500).json({ message: "Failed to check user permission" });
 			return;
 		}

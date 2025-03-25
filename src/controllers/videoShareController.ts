@@ -4,6 +4,7 @@ import { logger } from "../logger/logger";
 import axios from "axios";
 import env from "../env";
 import { AwsRepository } from "../repository/aws.repository";
+import CircuitBreaker from "opossum";
 
 interface Video {
 	id: string;
@@ -193,9 +194,7 @@ export const videoMoveController: RequestHandler = async (req, res) => {
 		});
 
 		// Log successful sharing
-		logger.info(
-			`User ${userId} shared video ${videoId} to folder ${folderId}`
-		);
+		logger.info(`User ${userId} shared video ${videoId} to folder ${folderId}`);
 
 		return res.status(201).json({ message: "Video shared successfully" });
 	} catch (err) {
@@ -205,27 +204,87 @@ export const videoMoveController: RequestHandler = async (req, res) => {
 	}
 };
 
-async function checkPermission({
-	userId,
-	source,
-	destination,
-}: PermissionCheckParams) {
-	console.log(source, destination);
-	try {
+// Define the Circuit Breaker outside the function for reuse
+const permissionServiceBreaker = new CircuitBreaker(
+	async ({ userId, source, destination }: PermissionCheckParams) => {
 		const { data } = await axios.post<PermissionResponse>(
 			`${env.COLLABORATION_API_URL}/permissions/share-file`,
 			{
 				userId,
 				source,
 				destination,
-			}
+			},
+			{ timeout: 2000 } // 2-second timeout per request
 		);
-
 		return data;
-	} catch (error) {
-		logger.error(
-			`Failed to check permission for sharing video in space ${source.spaceId} and folder ${source.folderId}: ${error.response?.data?.message}`
-		);
-		return null;
+	},
+	{
+		timeout: 2000, // Timeout after 2 seconds
+		errorThresholdPercentage: 50, // Trip if 50% of requests fail
+		resetTimeout: 30000, // Retry after 30 seconds
 	}
+);
+
+// Log state changes
+permissionServiceBreaker.on("open", () =>
+	logger.warn("Circuit opened for permission service")
+);
+permissionServiceBreaker.on("halfOpen", () =>
+	logger.info("Circuit half-open for permission service")
+);
+permissionServiceBreaker.on("close", () =>
+	logger.info("Circuit closed for permission service")
+);
+
+async function checkPermission({
+	userId,
+	source,
+	destination,
+}: PermissionCheckParams) {
+	console.log(source, destination);
+
+	const maxRetries = 3;
+	let lastError: any;
+
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		try {
+			const data = await permissionServiceBreaker.fire({
+				userId,
+				source,
+				destination,
+			});
+			return data;
+		} catch (error) {
+			lastError = error;
+			logger.warn(
+				`Attempt ${
+					attempt + 1
+				} failed to check permission for user ${userId}, space ${
+					source.spaceId
+				}, folder ${source.folderId}: ${
+					error instanceof Error ? error.message : error
+				}`
+			);
+
+			// Don't delay on the last attempt
+			if (attempt < maxRetries - 1) {
+				await new Promise((resolve) =>
+					setTimeout(resolve, 1000 * Math.pow(2, attempt))
+				);
+			}
+		}
+	}
+
+	// All retries failed or circuit is open
+	logger.error(
+		`Failed to check permission for sharing video in space ${
+			source.spaceId
+		} and folder ${source.folderId} after ${maxRetries} attempts: ${
+			lastError.response?.data?.message ||
+			(lastError instanceof Error ? lastError.message : lastError)
+		}`
+	);
+	return null;
 }
+
+export { checkPermission };

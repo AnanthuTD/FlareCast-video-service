@@ -83,6 +83,9 @@ importers:
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
+      opossum:
+        specifier: ^8.4.0
+        version: 8.4.0
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -1626,6 +1629,10 @@ packages:
   onetime@5.1.2:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
     engines: {node: '>=6'}
+
+  opossum@8.4.0:
+    resolution: {integrity: sha512-YYamqKu48bZCSTJKSWLLO4SSk8tKN2Gg2z1sJZVzHJYVObMO/xQpIzAh6re9HCMHRdB1dJvBjJH18DW7xYOicg==}
+    engines: {node: ^22 || ^21 || ^20 || ^18 || ^16}
 
   p-limit@3.1.0:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
@@ -4251,6 +4258,8 @@ snapshots:
   onetime@5.1.2:
     dependencies:
       mimic-fn: 2.1.0
+
+  opossum@8.4.0: {}
 
   p-limit@3.1.0:
     dependencies:
