@@ -85,9 +85,9 @@ export const setupVodNamespace = (namespace: Namespace) => {
 
 					const selectedData = await WorkspaceService.getSelectedWorkspace(
 						data.userId,
-						data.preset.workspaceId,
-						data.preset.folderId,
-						data.preset.spaceId
+						data.preset?.workspaceId,
+						data.preset?.folderId,
+						data.preset?.spaceId
 					);
 
 					const newVideo = await VideoRepository.createVideo(
