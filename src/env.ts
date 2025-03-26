@@ -22,6 +22,7 @@ const env = cleanEnv(process.env, {
 	AWS_S3_BUCKET_NAME: str(),
 	USER_SERVICE_API: url(),
 	LIVESTREAM_SECRET: str(),
+	ADMIN_ACCESS_TOKEN_SECRET: str()
 });
 
 export default env;

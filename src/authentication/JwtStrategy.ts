@@ -31,16 +31,21 @@ passport.use(
 	})
 );
 
+const adminOpts = {
+	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+	secretOrKey: env.ADMIN_ACCESS_TOKEN_SECRET,
+} satisfies StrategyOptionsWithoutRequest;
+
 passport.use(
 	"admin-jwt",
-	new JwtStrategy(opts, async (jwt_payload, done) => {
+	new JwtStrategy(adminOpts, async (jwt_payload, done) => {
 		try {
 			logger.info("============admin jwt_payload==============");
 			logger.info(jwt_payload);
 			logger.info("=====================================");
 
 			const admin = jwt_payload
-			if (admin && !admin.isBanned) {
+			if (admin) {
 				return done(null, admin);
 			} else {
 				return done(null, false);
