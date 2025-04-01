@@ -12,15 +12,15 @@ export const getLiveStreamToken: RequestHandler = async (req, res) => {
 	const folderId = req.query.folderId;
 	const spaceId = req.query.spaceId;
 
-	logger.debug("generating live stream token")
+	logger.debug("generating live stream token");
 
 	try {
-		const selectedData = await WorkspaceService.getSelectedWorkspace(
+		const selectedData = await WorkspaceService.getSelectedWorkspace({
 			userId,
 			workspaceId,
 			folderId,
-			spaceId
-		);
+			spaceId,
+		});
 		if (!selectedData.selectedWorkspace) {
 			res.status(404).json({ error: "No workspace selected" });
 			return;
@@ -33,7 +33,7 @@ export const getLiveStreamToken: RequestHandler = async (req, res) => {
 				folderId: selectedData.selectedFolder || undefined,
 				spaceId: selectedData.selectedSpace || undefined,
 				userId,
-				transcodeStatus: 'SUCCESS',
+				transcodeStatus: "SUCCESS",
 			},
 		});
 
