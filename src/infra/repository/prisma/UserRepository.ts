@@ -11,4 +11,12 @@ export class UserRepository implements IUserRepository {
 			where: { id },
 		});
 	}
+
+	searchByName(query: string) {
+		return prisma.user.findMany({
+			where: {
+				OR: [{ fullName: { contains: query } }],
+			},
+		});
+	}
 }
