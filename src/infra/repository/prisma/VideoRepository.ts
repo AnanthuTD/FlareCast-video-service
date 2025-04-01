@@ -85,7 +85,7 @@ export class VideoRepository implements IVideoRepository {
 	async create(data: Partial<Video>): Promise<VideoEntity> {
 		console.log(data);
 		const prismaVideo = await prisma.video.create({
-			data,
+			...(data ? { data } : {}),
 		});
 		return VideoRepository.toDomainEntity(prismaVideo);
 	}
@@ -572,8 +572,8 @@ export class VideoRepository implements IVideoRepository {
 	}
 
 	async statusCount() {
-			const aggregatedData = await prisma.video.aggregateRaw({
-				pipeline: [
+		const aggregatedData = await prisma.video.aggregateRaw({
+			pipeline: [
 				{
 					$facet: {
 						totalVideos: [{ $count: "total" }],
@@ -613,11 +613,11 @@ export class VideoRepository implements IVideoRepository {
 				},
 			],
 		});
-		
+
 		logger.info("================= status count =================");
 		console.log(aggregatedData);
 		logger.info("==============================================");
-		
+
 		return aggregatedData;
 	}
 }
