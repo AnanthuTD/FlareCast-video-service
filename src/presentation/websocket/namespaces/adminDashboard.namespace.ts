@@ -9,7 +9,7 @@ export const setupAdminDashboardNamespace = (namespace: Namespace) => {
 
 	namespace.on("connection", async (socket: Socket) => {
 		console.log(
-			`🟢 Admin ${socket.id} connected to /admin-dashboard adminId: ${socket.admin.id}`
+			`🟢 Admin ${socket.admin.id} connected to /admin-dashboard: socketId: ${socket.id}`
 		);
 
 		const admin = (socket as any).admin;
@@ -27,12 +27,46 @@ export const setupAdminDashboardNamespace = (namespace: Namespace) => {
 		});
 
 		// Emit initial data on connection
-		const videoRepository = new VideoRepository()
-    const initialData = await videoRepository.fetchAdminDashboardState();
-    socket.emit(EventName.ADMIN_DASHBOARD_INITIAL_DATA, initialData);
+		const videoRepository = new VideoRepository();
+		const initialData = await videoRepository.fetchAdminDashboardState();
+		let videoStatusCount = null;
+
+		try {
+			videoStatusCount = await videoRepository.statusCount();
+		} catch (err) {
+			console.error(err);
+		}
+
+		// socket.emit(EventName.ADMIN_DASHBOARD_INITIAL_DATA, "hello")
+
+		socket.emit(
+			EventName.ADMIN_DASHBOARD_INITIAL_DATA,
+			initialData,
+			videoStatusCount?.[0]
+		);
 	});
 
-	const eventEmitter = new LocalEventEmitter()
+	namespace.on(EventName.ADMIN_DASHBOARD_INITIAL_DATA, async (socket) => {
+		const videoRepository = new VideoRepository();
+		const initialData = await videoRepository.fetchAdminDashboardState();
+		let videoStatusCount = null;
+
+		try {
+			videoStatusCount = await videoRepository.statusCount();
+		} catch (err) {
+			console.error(err);
+		}
+
+		// socket.emit(EventName.ADMIN_DASHBOARD_INITIAL_DATA, "hello")
+
+		socket.emit(
+			EventName.ADMIN_DASHBOARD_INITIAL_DATA,
+			initialData,
+			videoStatusCount?.[0]
+		);
+	});
+
+	const eventEmitter = new LocalEventEmitter();
 
 	eventEmitter.on(EventName.NEW_VIDEO_UPLOAD, (videoData) => {
 		console.log("emitting new video data: ", videoData);

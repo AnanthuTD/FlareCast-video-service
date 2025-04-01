@@ -570,4 +570,54 @@ export class VideoRepository implements IVideoRepository {
 			data: { duration },
 		});
 	}
+
+	async statusCount() {
+			const aggregatedData = await prisma.video.aggregateRaw({
+				pipeline: [
+				{
+					$facet: {
+						totalVideos: [{ $count: "total" }],
+						transcodeStatusCount: [
+							{
+								$group: {
+									_id: "$transcodeStatus",
+									count: { $sum: 1 },
+								},
+							},
+						],
+						thumbnailStatusCount: [
+							{
+								$group: {
+									_id: "$thumbnailStatus",
+									count: { $sum: 1 },
+								},
+							},
+						],
+						descriptionAndTitleStatus: [
+							{
+								$group: {
+									_id: "$descriptionStatus",
+									count: { $sum: 1 },
+								},
+							},
+						],
+						transcriptionStatusCount: [
+							{
+								$group: {
+									_id: "$transcriptionStatus",
+									count: { $sum: 1 },
+								},
+							},
+						],
+					},
+				},
+			],
+		});
+		
+		logger.info("================= status count =================");
+		console.log(aggregatedData);
+		logger.info("==============================================");
+		
+		return aggregatedData;
+	}
 }
