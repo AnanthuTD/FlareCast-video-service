@@ -3,5 +3,5 @@ import moduleAlias from 'module-alias';
 
 // Configure moduleAlias
 if (__filename.endsWith('js')) {
-  moduleAlias.addAlias('@', __dirname + '/dist');
+  moduleAlias.addAlias('@', __dirname + '/src');
 }
