@@ -23,7 +23,7 @@
 		"type-check": "tsc --noEmit"
 	},
 	"prisma": {
-		"schema": "src/infra/databases/prisma/schema.prisma"
+		"schema": "./src/infra/databases/prisma/schema.prisma"
 	},
 	"keywords": [],
 	"author": "",
