@@ -68,12 +68,16 @@ export class VideoShareUseCase implements IVideoShareUseCase {
         };
       }
 
+      console.log("share permissions: ", permission)
+
       const newVideo = await this.videoRepository.create({
         ...video.toObject(),
         id: undefined, // Ensure new ID is generated
-        spaceId: permission.spaceId,
-        folderId: permission.folderId,
+        spaceId: permission.spaceId ?? undefined, //
+        folderId: permission.folderId ?? undefined,
       });
+
+      console.log(newVideo)
 
       this.awsRepository.copyVideo(videoId, newVideo.id).catch((err) => {
         logger.error(`Failed to copy video ${videoId} to ${newVideo.id} in S3: ${err}`);
