@@ -32,7 +32,7 @@ export class VideoProcessor {
 		socketId: string;
 	}) {
 		logger.info("Processing video requested");
-		console.log(data)
+		console.log(data);
 		await this.eventService.publishVideoProcessRequestEvent(data);
 	}
 
@@ -47,16 +47,15 @@ export class VideoProcessor {
 	}) {
 		try {
 			const eventConsumer = new KafkaEventConsumer();
-			const workspaceService = new WorkspaceService(
+			const workspaceService = new WorkspaceService();
 			/* 	() => {
 					eventConsumer.pause([{ topic: TOPICS.VIDEO_PROCESS_REQUEST_EVENT }]);
 				},
 				() => {
 					eventConsumer.resume([{ topic: TOPICS.VIDEO_PROCESS_REQUEST_EVENT }]);
 				} */
-			);
 
-			console.log("validateWorkspace: ", data)
+			console.log("validateWorkspace: ", data);
 
 			const selectedData = await workspaceService.getSelectedWorkspace(data);
 
@@ -83,7 +82,7 @@ export class VideoProcessor {
 		socketId: string;
 	}) {
 		logger.info("Validate Subscription");
-		console.log(data)
+		console.log(data);
 		const limits = await this.subscriptionRepo.getLimits(data.userId);
 		if (limits.permission !== "granted") {
 			throw new Error("Subscription limits not granted");
@@ -105,7 +104,7 @@ export class VideoProcessor {
 		socketId: string;
 	}) {
 		logger.info("create video");
-		console.log(data)
+		console.log(data);
 		const newVideo = await this.videoRepo.create({
 			userId: data.userId,
 			workspaceId: data.workspaceId,
@@ -125,18 +124,25 @@ export class VideoProcessor {
 		subscriptionLimits: any;
 		socketId: string;
 	}) {
-		logger.info("upload video");
-		console.log(data)
-		const inputVideo = path.join(process.cwd(), "temp_upload", data.fileName);
-		const s3Key = `${data.videoId}/original.${data.fileName.split(".").pop()}`;
-		await this.s3Service.uploadFileToS3(inputVideo, s3Key);
-		await this.eventService.sendVideoUploadEvent({
-			...data,
-			s3Key,
-		});
-		this.cleanupAndNotify({
-			...data,
-		});
+		try {
+			logger.info("upload video");
+			console.log(data);
+			const inputVideo = path.join(process.cwd(), "temp_upload", data.fileName);
+			const s3Key = `${data.videoId}/original.${data.fileName
+				.split(".")
+				.pop()}`;
+			await this.s3Service.uploadFileToS3(inputVideo, s3Key);
+			await this.eventService.sendVideoUploadEvent({
+				...data,
+				s3Key,
+			});
+			this.cleanupAndNotify({
+				...data,
+			});
+		} catch (err) {
+			logger.error("🔴 error while uploading to s3!");
+			console.error(err);
+		}
 	}
 
 	// step 6

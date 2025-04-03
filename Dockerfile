@@ -8,7 +8,7 @@ COPY package.json pnpm-lock.yaml ./
 
 RUN pnpm install
 
-COPY src/infra/databases/prisma/schema.prisma ./src/infra/databases/prisma/schema.prisma
+COPY prisma/schema.prisma ./prisma/schema.prisma
 
 RUN npx prisma generate || true
 
