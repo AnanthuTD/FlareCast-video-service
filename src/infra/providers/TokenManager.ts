@@ -3,6 +3,7 @@ import { verify, decode } from "jsonwebtoken";
 import { ITokenManagerProvider } from "../../app/providers/ITokenManager";
 import env from "../env";
 import { injectable } from "inversify";
+import { logger } from "../logger";
 
 /**
  * Provider for managing and validating authentication tokens.
@@ -33,6 +34,8 @@ export class TokenManagerProvider implements ITokenManagerProvider {
 			verify(token, env.ACCESS_TOKEN_SECRET || "");
 			return true;
 		} catch (error) {
+			logger.error(`Error on validating user access token with secret ${env.ACCESS_TOKEN_SECRET}: `);
+			console.error(error);
 			return false;
 		}
 	}

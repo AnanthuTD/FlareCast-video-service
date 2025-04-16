@@ -22,12 +22,14 @@ import { videoEditSuccessComposer } from "@/infra/services/composers/video/video
 import chatRoutes from "./chatRoutes";
 import { watchLaterAddComposer } from "@/infra/services/composers/watchLater/watchLaterAddComposer";
 import eventsController from "@/presentation/http/controllers/sse/eventController";
+import { extractUserInfo } from "../middlewares/extractUserDataFromHeader";
 
 // Import composer functions
 
 const protectedRoutes = Router();
 
-protectedRoutes.use(ensureAuthenticated);
+// protectedRoutes.use(ensureAuthenticated);
+protectedRoutes.use(extractUserInfo); 
 
 protectedRoutes.use("/chats", chatRoutes);
 

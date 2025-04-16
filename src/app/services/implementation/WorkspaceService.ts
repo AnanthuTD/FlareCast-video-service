@@ -33,10 +33,10 @@ export class WorkspaceService implements IWorkspaceService {
 					workspaceId || spaceId
 						? `${
 								env.COLLABORATION_API_URL
-						  }/workspace/${userId}/selected?workspaceId=${workspaceId}&folderId=${
+						  }/workspaces/${userId}/selected?workspaceId=${workspaceId}&folderId=${
 								folderId || ""
 						  }&spaceId=${spaceId || ""}`
-						: `${env.COLLABORATION_API_URL}/workspace/${userId}/selected`;
+						: `${env.COLLABORATION_API_URL}/workspaces/${userId}/selected`;
 
 				const response = await axios.get(url, { timeout: 2000 });
 				return response.data;
