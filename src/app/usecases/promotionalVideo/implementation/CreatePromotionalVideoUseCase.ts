@@ -7,6 +7,7 @@ import { CreatePromotionalVideoDTO } from "@/domain/dtos/promotionalVideo/Create
 import { CreatePromotionalVideoResponseDTO } from "@/domain/dtos/promotionalVideo/CreatePromotionalVideoResponseDTO";
 import { CreatePromotionalVideoErrorType } from "@/domain/enums/promotionalVideo/CreatePromotionalVideoErrorType";
 import { IS3Service } from "@/app/services/IS3Service";
+import { VideoCategory } from "@prisma/client";
 
 export class CreatePromotionalVideoUseCase
 	implements ICreatePromotionalVideoUseCase
@@ -23,9 +24,8 @@ export class CreatePromotionalVideoUseCase
 				| { error: CreatePromotionalVideoErrorType };
 		}
 	> {
-		const { title, description, videoExtension } = dto;
+		const { title, description, videoExtension, category } = dto;
 
-		// Validation: Ensure required fields are present
 		if (!title || !videoExtension) {
 			return {
 				success: false,
@@ -34,26 +34,23 @@ export class CreatePromotionalVideoUseCase
 		}
 
 		try {
-			// Create the video entity in the database
 			const newVideo = await this.videoRepository.create({
 				title,
 				description,
+				category,
 			});
 
-			// Update video with promotional-specific details
 			const updatedVideo = await this.videoRepository.updateTitleAndDescription(
 				newVideo.id,
 				title,
 				description,
-				VideoStatus.SUCCESS // Assuming VideoStatus.SUCCESS; adjust enum if needed
+				VideoStatus.SUCCESS
 			);
 
-			// Set category and type (assuming these can be updated separately or added to createVideo)
 			const promotionalVideo = await this.videoRepository.setPromotionalVideo(
 				newVideo.id
 			);
 
-			// Generate S3 signed URL
 			const key = `${newVideo.id}/original.${videoExtension}`;
 			const signedUrl = await this.s3Service.generateUploadUrl(
 				key,

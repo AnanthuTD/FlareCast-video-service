@@ -1,5 +1,5 @@
 import { VideoEntity, VideoStatus } from "@/domain/entities/Video";
-import { Video } from "@prisma/client";
+import { Video, VideoCategory } from "@prisma/client";
 
 export interface VideoSuggestion {
 	id: string;
@@ -33,7 +33,10 @@ export interface SearchVideoData {
 export interface IVideoRepository {
 	create(data: Partial<Video>): Promise<VideoEntity>;
 
-	updateProcessingStatus(videoId: string, status: boolean): Promise<VideoEntity>;
+	updateProcessingStatus(
+		videoId: string,
+		status: boolean
+	): Promise<VideoEntity>;
 
 	updateTitleAndDescription(
 		videoId: string,
@@ -96,8 +99,12 @@ export interface IVideoRepository {
 
 	getVideoById(videoId: string): Promise<VideoEntity | null>;
 
-	findPromotionalVideos(skip: number, limit: number): Promise<VideoEntity[]>;
-	countPromotionalVideos(): Promise<number>;
+	findPromotionalVideos(
+		skip: number,
+		limit: number,
+		category: VideoCategory
+	): Promise<VideoEntity[]>;
+	countPromotionalVideos({ category }: { category: string }): Promise<number>;
 
 	findVideos(query: any, skip: number, limit: number): Promise<VideoEntity[]>;
 	countVideos(query: any): Promise<number>;
@@ -109,11 +116,18 @@ export interface IVideoRepository {
 		spaceId?: string;
 	}): Promise<VideoEntity>;
 
-	update(videoId: string, data: Partial<VideoEntity>): Promise<void>
+	update(videoId: string, data: Partial<VideoEntity>): Promise<void>;
 
-	findByIdAndUserId(videoId: string, userId: string): Promise<VideoEntity | null>;
-  updateVisibility(videoId: string, isPublic: boolean): Promise<VideoEntity>;
-  findManyByIds(videoIds: string[], skip: number, take: number): Promise<VideoEntity[]>;
+	findByIdAndUserId(
+		videoId: string,
+		userId: string
+	): Promise<VideoEntity | null>;
+	updateVisibility(videoId: string, isPublic: boolean): Promise<VideoEntity>;
+	findManyByIds(
+		videoIds: string[],
+		skip: number,
+		take: number
+	): Promise<VideoEntity[]>;
 
 	setDuration(videoId: string, duration: string): Promise<any>;
 }

@@ -8,6 +8,7 @@ import { HttpResponse } from "../../helpers/implementations/HttpResponse";
 import { HttpRequest } from "../../helpers/implementations/HttpRequest";
 import { GetPromotionalVideosErrorType } from "@/domain/enums/promotionalVideo/GetPromotionalVideosErrorType";
 import { IGetPromotionalVideosUseCase } from "@/app/usecases/promotionalVideo/IGetPromotionalVideosUseCase";
+import { VideoCategory } from "@prisma/client";
 
 export class GetPromotionalVideosController implements IController {
   constructor(
@@ -18,14 +19,16 @@ export class GetPromotionalVideosController implements IController {
 
   async handle(httpRequest: HttpRequest): Promise<IHttpResponse> {
     let error;
-    const { skip = "0", limit = "10" } = httpRequest.query as {
+    const { skip = "0", limit = "10", category } = httpRequest.query as {
       skip?: string;
       limit?: string;
+      category?: VideoCategory
     };
 
     const response = await this.getPromotionalVideosUseCase.execute({
       skip: parseInt(skip, 10) || 0,
       limit: parseInt(limit, 10) || 10,
+      category
     });
 
     if (!response.success) {

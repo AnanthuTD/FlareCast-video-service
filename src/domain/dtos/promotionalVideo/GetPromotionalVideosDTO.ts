@@ -1,5 +1,5 @@
-// src/domain/dtos/video/GetPromotionalVideosDTO.ts
 export interface GetPromotionalVideosDTO {
-  skip: number;
-  limit: number;
+	skip: number;
+	limit: number;
+	category: "PROMOTIONAL" | "GET_STARTED" | "DEFAULT";
 }

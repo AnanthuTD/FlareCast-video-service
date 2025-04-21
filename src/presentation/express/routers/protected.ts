@@ -107,17 +107,6 @@ protectedRoutes.get(
 	}
 );
 
-protectedRoutes.get(
-	"/promotionalVideos",
-	async (request: Request, response: Response) => {
-		const adapter = await expressAdapter(
-			request,
-			getPromotionalVideosComposer()
-		);
-		response.status(adapter.statusCode).json(adapter.body);
-	}
-);
-
 // Watch Later endpoints
 protectedRoutes.post(
 	"/watch-later",

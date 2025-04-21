@@ -53,6 +53,7 @@ model Video {
 enum VideoCategory {
   PROMOTIONAL
   DEFAULT
+  GET_STARTED
 }
 
 enum VideoStatus {

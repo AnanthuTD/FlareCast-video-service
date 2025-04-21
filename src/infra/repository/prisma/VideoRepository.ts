@@ -459,10 +459,11 @@ export class VideoRepository implements IVideoRepository {
 
 	async findPromotionalVideos(
 		skip: number,
-		limit: number
+		limit: number,
+		category: VideoCategory
 	): Promise<VideoEntity[]> {
 		const prismaVideos = await prisma.video.findMany({
-			where: { category: "PROMOTIONAL" },
+			where: { category },
 			skip,
 			take: limit,
 			orderBy: { createdAt: "desc" },
@@ -477,9 +478,13 @@ export class VideoRepository implements IVideoRepository {
 		return prismaVideos.map((v) => VideoRepository.toDomainEntity(v));
 	}
 
-	async countPromotionalVideos(): Promise<number> {
+	async countPromotionalVideos({
+		category = "PROMOTIONAL",
+	}: {
+		category: string;
+	}): Promise<number> {
 		return prisma.video.count({
-			where: { category: "PROMOTIONAL" },
+			where: { category },
 		});
 	}
 

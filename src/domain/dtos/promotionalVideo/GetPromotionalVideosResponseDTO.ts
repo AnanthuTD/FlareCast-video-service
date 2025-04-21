@@ -1,4 +1,3 @@
-// src/domain/dtos/video/GetPromotionalVideosResponseDTO.ts
 export interface PromotionalVideoDTO {
   id: string;
   totalViews: number;
