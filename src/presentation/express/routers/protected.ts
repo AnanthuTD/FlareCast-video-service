@@ -1,9 +1,17 @@
 import { Router, Request, Response } from "express";
-import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { expressAdapter } from "@/presentation/adapters/express";
+
+// import middlewares
+import { extractUserInfo } from "../middlewares/extractUserDataFromHeader";
+
+// import routes
+import chatRoutes from "./chatRoutes";
+
+// import controllers
+import eventsController from "@/presentation/http/controllers/sse/eventController";
+
+// Import composer functions
 import { createUpdateVideoVisibilityComposer } from "@/infra/services/composers/video/videoVisibilityComposer";
-import { eventsComposer } from "@/infra/services/composers/eventsComposer";
-import { getPromotionalVideosComposer } from "@/infra/services/composers/promotionalVideo/getPromotionalVideosComposer";
 import { autocompleteSearchVideosComposer } from "@/infra/services/composers/video/autocompleteSearchVideosComposer";
 import { getVideosComposer } from "@/infra/services/composers/video/getVideosComposer";
 import { getLiveStreamTokenComposer } from "@/infra/services/composers/getLiveStreamTokenComposer";
@@ -19,19 +27,19 @@ import { updateVideoDescriptionComposer } from "@/infra/services/composers/video
 import { videoShareComposer } from "@/infra/services/composers/video/videoShareComposer";
 import { videoMoveComposer } from "@/infra/services/composers/video/videoMoveComposer";
 import { videoEditSuccessComposer } from "@/infra/services/composers/video/videoEditSuccessComposser";
-import chatRoutes from "./chatRoutes";
+import { getVideoCountComposer } from "@/infra/services/composers/video/getVideoCountComposer";
 import { watchLaterAddComposer } from "@/infra/services/composers/watchLater/watchLaterAddComposer";
-import eventsController from "@/presentation/http/controllers/sse/eventController";
-import { extractUserInfo } from "../middlewares/extractUserDataFromHeader";
-
-// Import composer functions
 
 const protectedRoutes = Router();
 
-// protectedRoutes.use(ensureAuthenticated);
-protectedRoutes.use(extractUserInfo); 
+protectedRoutes.use(extractUserInfo);
 
 protectedRoutes.use("/chats", chatRoutes);
+
+protectedRoutes.get("/count", async (request: Request, response: Response) => {
+	const adapter = await expressAdapter(request, getVideoCountComposer());
+	response.status(adapter.statusCode).json(adapter.body);
+});
 
 // Video-related endpoints
 protectedRoutes.patch(
@@ -45,22 +53,6 @@ protectedRoutes.patch(
 	}
 );
 
-/* protectedRoutes.get(
-	"/:workspaceId/events",
-	async (request: Request, response: Response) => {
-		// Set SSE headers
-    response.setHeader("Content-Type", "text/event-stream");
-    response.setHeader("Cache-Control", "no-cache");
-    response.setHeader("Connection", "keep-alive");
-    response.setHeader("X-Accel-Buffering", "no");
-    response.setHeader("Access-Control-Allow-Origin", "*");
-
-		const adapter = await expressAdapter(request, eventsComposer());
-		if(adapter.statusCode !== 200){
-			response.status(adapter.statusCode).json(adapter.body);
-		}
-	}
-); */
 protectedRoutes.get("/:workspaceId/events", eventsController);
 
 protectedRoutes.get(

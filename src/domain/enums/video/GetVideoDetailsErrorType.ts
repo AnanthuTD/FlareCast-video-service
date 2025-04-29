@@ -1,4 +1,3 @@
-// src/domain/enums/video/GetVideoDetailsErrorType.ts
 export enum GetVideoDetailsErrorType {
   VIDEO_NOT_FOUND = "Video not found",
   UNAUTHORIZED = "User don't have access rights to this video",
