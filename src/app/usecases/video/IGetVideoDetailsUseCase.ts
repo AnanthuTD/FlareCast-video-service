@@ -1,4 +1,3 @@
-// src/app/usecases/video/IGetVideoDetailsUseCase.ts
 import { ResponseDTO } from "@/domain/dtos/Response";
 import { GetVideoDetailsDTO } from "@/domain/dtos/video/GetVideoDetailsDTO";
 import { GetVideoDetailsResponseDTO } from "@/domain/dtos/video/GetVideoDetailsResponseDTO";
