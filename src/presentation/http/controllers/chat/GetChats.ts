@@ -33,15 +33,15 @@ export class GetChatsController implements IController {
       const errorType = response.data.error as GetChatsErrorType;
       switch (errorType) {
         case GetChatsErrorType.INVALID_LIMIT:
-          error = this.httpErrors.error_400();
+          error = this.httpErrors.badRequest();
           return new HttpResponse(error.statusCode, { message: errorType });
         default:
-          error = this.httpErrors.error_500();
+          error = this.httpErrors.internalServerError();
           return new HttpResponse(error.statusCode, { message: "Internal server error" });
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

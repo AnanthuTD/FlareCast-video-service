@@ -27,18 +27,18 @@ export class VideoViewController implements IController {
       switch (errorType) {
         case VideoViewErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Video ID and user ID are required" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Failed to process video view" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_202(response.data);
+    const success = this.httpSuccess.accepted(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

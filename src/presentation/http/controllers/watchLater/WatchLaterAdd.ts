@@ -27,23 +27,23 @@ export class WatchLaterAddController implements IController {
       switch (errorType) {
         case WatchLaterAddErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Video ID is required" }
           );
         case WatchLaterAddErrorType.VIDEO_NOT_FOUND:
           return new HttpResponse(
-            this.httpErrors.error_404().statusCode,
+            this.httpErrors.notFound().statusCode,
             { message: "Video not found" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Failed to add video to watch later" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_201(response.data);
+    const success = this.httpSuccess.created(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

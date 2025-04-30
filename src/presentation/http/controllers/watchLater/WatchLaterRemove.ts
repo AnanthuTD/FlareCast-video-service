@@ -29,21 +29,21 @@ export class WatchLaterRemoveController implements IController {
 			const errorType = response.data.error as WatchLaterRemoveErrorType;
 			switch (errorType) {
 				case WatchLaterRemoveErrorType.INVALID_INPUT:
-					return new HttpResponse(this.httpErrors.error_400().statusCode, {
+					return new HttpResponse(this.httpErrors.badRequest().statusCode, {
 						message: "Video ID is required",
 					});
 				case WatchLaterRemoveErrorType.VIDEO_NOT_FOUND:
-					return new HttpResponse(this.httpErrors.error_404().statusCode, {
+					return new HttpResponse(this.httpErrors.notFound().statusCode, {
 						message: "Video not found",
 					});
 				default:
-					return new HttpResponse(this.httpErrors.error_500().statusCode, {
+					return new HttpResponse(this.httpErrors.internalServerError().statusCode, {
 						message: "Failed to remove video from watch later",
 					});
 			}
 		}
 
-		const success = this.httpSuccess.success_200(response.data);
+		const success = this.httpSuccess.ok(response.data);
 		return new HttpResponse(success.statusCode, success.body);
 	}
 }

@@ -30,26 +30,26 @@ export class GetVideoDetailsController implements IController {
 			const errorType = response.data.error as GetVideoDetailsErrorType;
 			switch (errorType) {
 				case GetVideoDetailsErrorType.VIDEO_NOT_FOUND:
-					return new HttpResponse(this.httpErrors.error_404().statusCode, {
+					return new HttpResponse(this.httpErrors.notFound().statusCode, {
 						message: "Video not found",
 						video: null,
 					});
 				case GetVideoDetailsErrorType.UNAUTHORIZED:
-					return new HttpResponse(this.httpErrors.error_403().statusCode, {
+					return new HttpResponse(this.httpErrors.forbidden().statusCode, {
 						message: "User don't have access rights to this video",
 					});
 				case GetVideoDetailsErrorType.PERMISSION_CHECK_FAILED:
-					return new HttpResponse(this.httpErrors.error_500().statusCode, {
+					return new HttpResponse(this.httpErrors.internalServerError().statusCode, {
 						message: "Failed to check user permission",
 					});
 				default:
-					return new HttpResponse(this.httpErrors.error_500().statusCode, {
+					return new HttpResponse(this.httpErrors.internalServerError().statusCode, {
 						message: "Internal server error",
 					});
 			}
 		}
 
-		const success = this.httpSuccess.success_200(response.data);
+		const success = this.httpSuccess.ok(response.data);
 		return new HttpResponse(success.statusCode, success.body);
 	}
 }

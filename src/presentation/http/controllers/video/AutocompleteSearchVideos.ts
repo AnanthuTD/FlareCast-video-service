@@ -37,15 +37,15 @@ export class AutocompleteSearchVideosController implements IController {
       const errorType = response.data.error as AutocompleteSearchVideosErrorType;
       switch (errorType) {
         case AutocompleteSearchVideosErrorType.MISSING_FIELDS:
-          error = this.httpErrors.error_400();
+          error = this.httpErrors.badRequest();
           return new HttpResponse(error.statusCode, { results: [] });
         default:
-          error = this.httpErrors.error_500();
+          error = this.httpErrors.internalServerError();
           return new HttpResponse(error.statusCode, { message: "Internal server error" });
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

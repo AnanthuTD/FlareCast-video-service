@@ -31,18 +31,18 @@ export class SendChatMessageController implements IController {
       const errorType = response.data.error as SendChatMessageErrorType;
       switch (errorType) {
         case SendChatMessageErrorType.MISSING_FIELDS:
-          error = this.httpErrors.error_400();
+          error = this.httpErrors.badRequest();
           return new HttpResponse(error.statusCode, { message: errorType });
         case SendChatMessageErrorType.VIDEO_NOT_FOUND:
-          error = this.httpErrors.error_404();
+          error = this.httpErrors.notFound();
           return new HttpResponse(error.statusCode, { message: errorType });
         default:
-          error = this.httpErrors.error_500();
+          error = this.httpErrors.internalServerError();
           return new HttpResponse(error.statusCode, { message: "Internal server error" });
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

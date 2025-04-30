@@ -32,28 +32,28 @@ export class UpdateVideoDescriptionController implements IController {
       switch (errorType) {
         case UpdateVideoDescriptionErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Video ID and description are required" }
           );
         case UpdateVideoDescriptionErrorType.VIDEO_NOT_FOUND:
           return new HttpResponse(
-            this.httpErrors.error_404().statusCode,
+            this.httpErrors.notFound().statusCode,
             { message: "Video not found or description update failed" }
           );
         case UpdateVideoDescriptionErrorType.UNAUTHORIZED:
           return new HttpResponse(
-            this.httpErrors.error_403().statusCode,
+            this.httpErrors.forbidden().statusCode,
             { message: "User does not have permission to edit this video" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Internal server error" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

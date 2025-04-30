@@ -31,12 +31,12 @@ export class EventsController implements IController {
 		if (!result.success) {
 			const errorType = result.data.error as EventsErrorType;
 
-			return new HttpResponse(this.httpErrors.error_400().statusCode, {
+			return new HttpResponse(this.httpErrors.badRequest().statusCode, {
 				message: errorType,
 			});
 		}
 
 		// Connection is kept open for SSE; no immediate response body
-		return new HttpResponse(this.httpSuccess.success_200().statusCode, {});
+		return new HttpResponse(this.httpSuccess.ok().statusCode, {});
 	}
 }

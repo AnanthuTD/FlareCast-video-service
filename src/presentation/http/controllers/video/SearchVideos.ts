@@ -36,7 +36,7 @@ export class SearchVideosController implements IController {
       return new HttpResponse(500, { message: "Internal server error" });
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

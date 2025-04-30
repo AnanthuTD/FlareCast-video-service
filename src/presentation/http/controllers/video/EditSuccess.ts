@@ -33,18 +33,18 @@ export class VideoEditSuccessController implements IController {
       switch (errorType) {
         case OnSuccessErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { error: "Video ID and key are required" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Internal server error" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

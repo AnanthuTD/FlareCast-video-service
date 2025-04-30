@@ -23,7 +23,7 @@ export class GetVideoCountController implements IController {
 		};
 
 		if (!folderId && !spaceId && !workspaceId) {
-			return new HttpResponse(this.httpErrors.error_400().statusCode, {
+			return new HttpResponse(this.httpErrors.badRequest().statusCode, {
 				message: "Any of the given is needed - folderId, spaceId, workspaceId",
 				count: 0,
 			});
@@ -40,19 +40,19 @@ export class GetVideoCountController implements IController {
 			const errorType = response.data.error as GetVideoCountErrorType;
 			switch (errorType) {
 				case GetVideoCountErrorType.INSUFFICIENT_DATA:
-					return new HttpResponse(this.httpErrors.error_400().statusCode, {
+					return new HttpResponse(this.httpErrors.badRequest().statusCode, {
 						message:
 							"Any of the given is needed - folderId, spaceId, workspaceId",
 						count: 0,
 					});
 				default:
-					return new HttpResponse(this.httpErrors.error_500().statusCode, {
+					return new HttpResponse(this.httpErrors.internalServerError().statusCode, {
 						message: "Internal server error",
 					});
 			}
 		}
 
-		const success = this.httpSuccess.success_200(response.data);
+		const success = this.httpSuccess.ok(response.data);
 		return new HttpResponse(success.statusCode, success.body);
 	}
 }

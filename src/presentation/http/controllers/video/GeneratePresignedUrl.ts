@@ -29,25 +29,25 @@ export class GeneratePresignedUrlController implements IController {
 			const errorType = response.data.error as GeneratePresignedUrlErrorType;
 			switch (errorType) {
 				case GeneratePresignedUrlErrorType.INVALID_INPUT:
-					return new HttpResponse(this.httpErrors.error_400().statusCode, {
+					return new HttpResponse(this.httpErrors.badRequest().statusCode, {
 						error: "Video ID is required",
 					});
 				case GeneratePresignedUrlErrorType.VIDEO_NOT_FOUND:
-					return new HttpResponse(this.httpErrors.error_404().statusCode, {
+					return new HttpResponse(this.httpErrors.notFound().statusCode, {
 						message: "Video not found",
 					});
 				case GeneratePresignedUrlErrorType.UNAUTHORIZED:
-					return new HttpResponse(this.httpErrors.error_403().statusCode, {
+					return new HttpResponse(this.httpErrors.forbidden().statusCode, {
 						message: "User does not have permission to edit this video",
 					});
 				default:
-					return new HttpResponse(this.httpErrors.error_500().statusCode, {
+					return new HttpResponse(this.httpErrors.internalServerError().statusCode, {
 						error: "Failed to generate presigned URL",
 					});
 			}
 		}
 
-		const success = this.httpSuccess.success_200(response.data);
+		const success = this.httpSuccess.ok(response.data);
 		return new HttpResponse(success.statusCode, success.body);
 	}
 }

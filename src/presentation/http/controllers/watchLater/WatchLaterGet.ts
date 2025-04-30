@@ -36,18 +36,18 @@ export class WatchLaterGetController implements IController {
       switch (errorType) {
         case WatchLaterGetErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Workspace ID is required or pagination parameters are invalid" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Failed to get watch later videos" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

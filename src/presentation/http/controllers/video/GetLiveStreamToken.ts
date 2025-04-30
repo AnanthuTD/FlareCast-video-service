@@ -36,20 +36,20 @@ export class GetLiveStreamTokenController implements IController {
       const errorType = response.data.error as GetLiveStreamTokenErrorType;
       switch (errorType) {
         case GetLiveStreamTokenErrorType.NO_WORKSPACE_SELECTED:
-          error = this.httpErrors.error_404();
+          error = this.httpErrors.notFound();
           return new HttpResponse(error.statusCode, { error: errorType });
         case GetLiveStreamTokenErrorType.INVALID_INPUT:
-          error = this.httpErrors.error_400();
+          error = this.httpErrors.badRequest();
           return new HttpResponse(error.statusCode, { error: errorType });
         default:
-          error = this.httpErrors.error_500();
+          error = this.httpErrors.internalServerError();
           return new HttpResponse(error.statusCode, { message: "Internal server error" });
       }
     }
 
     console.log(response.data)
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

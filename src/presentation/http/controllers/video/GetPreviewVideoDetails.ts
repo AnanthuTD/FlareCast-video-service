@@ -26,18 +26,18 @@ export class GetPreviewVideoDetailsController implements IController {
       switch (errorType) {
         case GetPreviewVideoDetailsErrorType.VIDEO_NOT_FOUND:
           return new HttpResponse(
-            this.httpErrors.error_404().statusCode,
+            this.httpErrors.notFound().statusCode,
             { message: "Video not found", video: null }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Internal server error" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

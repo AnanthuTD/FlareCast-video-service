@@ -28,23 +28,23 @@ export class VisibilityController implements IController {
       switch (errorType) {
         case VisibilityErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Video ID and isPublic are required" }
           );
         case VisibilityErrorType.VIDEO_NOT_FOUND:
           return new HttpResponse(
-            this.httpErrors.error_404().statusCode,
+            this.httpErrors.notFound().statusCode,
             { message: "Video not found" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Failed to update visibility" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_200(response.data);
+    const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }

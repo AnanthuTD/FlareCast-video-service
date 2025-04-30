@@ -32,33 +32,33 @@ export class VideoMoveController implements IController {
       switch (errorType) {
         case VideoMoveErrorType.INVALID_INPUT:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Video ID and Space ID are required" }
           );
         case VideoMoveErrorType.VIDEO_NOT_FOUND:
           return new HttpResponse(
-            this.httpErrors.error_404().statusCode,
+            this.httpErrors.notFound().statusCode,
             { message: "Video not found" }
           );
         case VideoMoveErrorType.ALREADY_MOVED:
           return new HttpResponse(
-            this.httpErrors.error_400().statusCode,
+            this.httpErrors.badRequest().statusCode,
             { message: "Video already shared in this space/folder" }
           );
         case VideoMoveErrorType.UNAUTHORIZED:
           return new HttpResponse(
-            this.httpErrors.error_403().statusCode,
+            this.httpErrors.forbidden().statusCode,
             { message: "User does not have permission to share in this space/folder" }
           );
         default:
           return new HttpResponse(
-            this.httpErrors.error_500().statusCode,
+            this.httpErrors.internalServerError().statusCode,
             { message: "Failed to share video" }
           );
       }
     }
 
-    const success = this.httpSuccess.success_201(response.data);
+    const success = this.httpSuccess.created(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }
 }
