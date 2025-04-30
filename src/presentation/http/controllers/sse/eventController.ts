@@ -14,7 +14,8 @@ export default function eventsController(req: Request, res: Response) {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 
 	const userId = req.user.id;
-	const { workspaceId, spaceId } = req.params;
+	const { workspaceId } = req.params;
+	const { spaceId } = req.query;
 
 	if (!userId) {
 		res.sendStatus(400);
@@ -54,7 +55,6 @@ export async function sendVideoStatusUpdate(value: {
 		const videoRepo = new VideoRepository();
 
 		sseService.sendVideoStatusUpdate(videoRepo, value);
-
 	} catch (error) {
 		logger.error(
 			`🔴 Error sending SSE event to user for video: ${value.videoId}:`,
