@@ -66,7 +66,7 @@ export class GetVideosUseCase implements IGetVideosUseCase {
 
       // Enrich video data
       const videosWithThumbnail = videos.map((v) => ({
-        ...v,
+        ...(v.toObject()),
         id: v.id,
         title: v.title,
         user: v.user,
