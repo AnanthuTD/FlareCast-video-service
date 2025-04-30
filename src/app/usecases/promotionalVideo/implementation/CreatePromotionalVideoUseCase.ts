@@ -52,10 +52,15 @@ export class CreatePromotionalVideoUseCase
 			);
 
 			const key = `${newVideo.id}/original.${videoExtension}`;
+
+			logger.debug("⚠️ promotional video key: " + key)
+
 			const signedUrl = await this.s3Service.generateUploadUrl(
 				key,
 				`video/${videoExtension}`
 			);
+
+			logger.debug("⚠️ signed url: " + signedUrl)
 
 			return {
 				success: true,
