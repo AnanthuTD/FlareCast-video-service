@@ -66,6 +66,7 @@ export class GetVideosUseCase implements IGetVideosUseCase {
 
       // Enrich video data
       const videosWithThumbnail = videos.map((v) => ({
+        ...v,
         id: v.id,
         title: v.title,
         user: v.user,
@@ -75,8 +76,6 @@ export class GetVideosUseCase implements IGetVideosUseCase {
         createdAt: v.createdAt,
         thumbnailUrl: v.thumbnailStatus ? `${env.AWS_CLOUDFRONT_URL}/${v.id}/thumbnails/thumb00001.jpg` : null,
         views: v.totalViews ?? 0,
-        comments: 6, // Static; replace with actual data if available
-        shares: 10, // Static; replace with actual data if available
         userName: v.user?.fullName ?? "Unknown User",
         timeAgo: getTimeAgo(v.createdAt),
         userAvatarUrl: v.user?.image ?? null,
