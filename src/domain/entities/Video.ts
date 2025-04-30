@@ -28,6 +28,7 @@ export interface IVideoEntity {
 export enum VideoCategory {
 	PROMOTIONAL = "PROMOTIONAL",
 	DEFAULT = "DEFAULT",
+	GET_STARTED = "GET_STARTED",
 }
 
 export enum VideoStatus {

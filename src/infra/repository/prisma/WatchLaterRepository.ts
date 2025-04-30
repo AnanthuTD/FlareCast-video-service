@@ -1,4 +1,7 @@
-import { IWatchLaterRepository, WatchLaterParams } from "@/app/repository/IWatchLaterRepository";
+import {
+	IWatchLaterRepository,
+	WatchLaterParams,
+} from "@/app/repository/IWatchLaterRepository";
 import { WatchLaterEntity } from "@/domain/entities/WatchLater";
 import prisma from "@/infra/databases/prisma/connection";
 
@@ -11,7 +14,7 @@ export class WatchLaterRepository implements IWatchLaterRepository {
 		const watchLater = await prisma.watchLater.findFirst({
 			where: {
 				userId,
-				workspaceId: workspaceId ?? undefined,
+				...(workspaceId ? { workspaceId } : {}),
 				videoIds: { has: videoId },
 			},
 			// select: { id: true },
@@ -35,7 +38,7 @@ export class WatchLaterRepository implements IWatchLaterRepository {
 	async findByUserIdAndWorkspaceId(
 		userId: string,
 		workspaceId: string
-	): Promise<{videoIds: string[]} | null> {
+	): Promise<{ videoIds: string[] } | null> {
 		const watchLater = await prisma.watchLater.findFirst({
 			where: { userId, workspaceId },
 			select: { videoIds: true },
@@ -47,7 +50,7 @@ export class WatchLaterRepository implements IWatchLaterRepository {
 		videoId,
 		userId,
 		workspaceId,
-	}: WatchLaterParams): Promise<{videoIds: string[]}> {
+	}: WatchLaterParams): Promise<{ videoIds: string[] }> {
 		const watchLater = await prisma.watchLater.update({
 			where: { userId_workspaceId: { userId, workspaceId } },
 			data: {
