@@ -5,6 +5,7 @@ import { ISSEService, VideoStatusUpdateEvent } from "../ISSEService";
 
 export class SSEService implements ISSEService {
 	private userSockets: Map<string, Response> = new Map();
+	private eventQueue: { response: Response; data: string }[] = [];
 
 	private generateKey({
 		userId,
@@ -15,7 +16,9 @@ export class SSEService implements ISSEService {
 		workspaceId: string;
 		spaceId?: string;
 	}) {
-		return `${userId}:${workspaceId}${spaceId ? ":" + spaceId : ""}`;
+		const parts = [userId, workspaceId];
+		if (spaceId) parts.push(spaceId);
+		return parts.join(":");
 	}
 
 	registerConnection({
@@ -29,8 +32,17 @@ export class SSEService implements ISSEService {
 		spaceId?: string;
 		response: Response;
 	}): void {
+		response.set({
+			"Content-Type": "text/event-stream",
+			"Cache-Control": "no-cache",
+			Connection: "keep-alive",
+		});
 		const key = this.generateKey({ userId, workspaceId, spaceId });
 		this.userSockets.set(key, response);
+		response.on("close", () => {
+			this.removeConnection(userId, workspaceId, spaceId);
+			logger.info(`🗑️ Removed closed connection for ${key}`);
+		});
 	}
 
 	removeConnection(
@@ -42,6 +54,16 @@ export class SSEService implements ISSEService {
 		this.userSockets.delete(key);
 	}
 
+	private processQueue() {
+		if (this.eventQueue.length === 0) return;
+		const { response, data } = this.eventQueue.shift()!;
+		if (!response.writableEnded) {
+			response.write(data);
+			response.flush();
+		}
+		setImmediate(() => this.processQueue());
+	}
+
 	async sendVideoStatusUpdate(
 		videoRepository: IVideoRepository,
 		event: VideoStatusUpdateEvent
@@ -50,10 +72,8 @@ export class SSEService implements ISSEService {
 			const video = await videoRepository.getVideoById(event.videoId);
 			if (!video) {
 				logger.error(`🔴 Video ${event.videoId} not found`);
-				return;
+				throw new Error(`Video ${event.videoId} not found`);
 			}
-
-      console.log(this.userSockets.keys())
 
 			const key = this.generateKey({
 				userId: video.userId,
@@ -64,37 +84,33 @@ export class SSEService implements ISSEService {
 			const userResponses: Response[] = [];
 
 			if (video.spaceId) {
-				for (const key in this.userSockets) {
-					logger.debug("key = " + key);
-
-					const keyArray = key.split(":");
-
-					console.log("keyArray = ", keyArray);
-
-					if (keyArray.length >= 3 && keyArray[2] === video.spaceId) {
-						console.log("Matched = ", key);
-						userResponses.push(this.userSockets.get(key)!);
+				this.userSockets.forEach((response, socketKey) => {
+					const [userId, workspaceId, socketSpaceId] = socketKey.split(":");
+					if (socketSpaceId && socketSpaceId === video.spaceId) {
+						const userResponse = this.userSockets.get(socketKey);
+						if (userResponse) {
+							userResponses.push(userResponse);
+						}
 					}
-				}
+				});
 			} else {
-				// personal lib
-				userResponses.push(this.userSockets.get(key)!);
+				const userResponse = this.userSockets.get(key);
+				if (userResponse) {
+					userResponses.push(userResponse);
+				}
 			}
 
-			console.log("userResponse = ", userResponses.length);
-
 			for (const userResponse of userResponses) {
-				if (userResponse) {
-					userResponse.write(
-						`data: ${JSON.stringify({
-							...event,
-							type: video.type,
-							folderId: video.folderId,
-							workspaceId: video.workspaceId,
-							spaceId: video.spaceId,
-						})}\n\n`
-					);
-					userResponse.flush();
+				if (userResponse && !userResponse.writableEnded) {
+					const data = `data: ${JSON.stringify({
+						...event,
+						type: video.type,
+						folderId: video.folderId,
+						workspaceId: video.workspaceId,
+						spaceId: video.spaceId,
+					})}\n\n`;
+					this.eventQueue.push({ response: userResponse, data });
+					this.processQueue();
 					logger.info(
 						`✅ Sent update to user ${video.userId}: ${event.message}`
 					);
@@ -107,6 +123,7 @@ export class SSEService implements ISSEService {
 				`🔴 Error sending SSE event for video ${event.videoId}:`,
 				error
 			);
+			throw error;
 		}
 	}
 }
