@@ -53,6 +53,8 @@ export class SSEService implements ISSEService {
 				return;
 			}
 
+      console.log(this.userSockets.keys())
+
 			const key = this.generateKey({
 				userId: video.userId,
 				workspaceId: video.workspaceId,
@@ -78,6 +80,8 @@ export class SSEService implements ISSEService {
 				// personal lib
 				userResponses.push(this.userSockets.get(key)!);
 			}
+
+			console.log("userResponse = ", userResponses.length);
 
 			for (const userResponse of userResponses) {
 				if (userResponse) {

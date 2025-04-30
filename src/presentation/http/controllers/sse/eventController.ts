@@ -52,6 +52,8 @@ export async function sendVideoStatusUpdate(value: {
 	event: string;
 }) {
 	try {
+		logger.debug("sendVideoStatusUpdate triggered!");
+
 		const videoRepo = new VideoRepository();
 
 		sseService.sendVideoStatusUpdate(videoRepo, value);
