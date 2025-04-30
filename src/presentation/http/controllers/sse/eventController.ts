@@ -2,41 +2,44 @@ import { Request, Response } from "express";
 import { VideoStatus } from "@prisma/client";
 import { VideoRepository } from "@/infra/repository/prisma/VideoRepository";
 import { logger } from "@/infra/logger";
+import { SSEService } from "@/app/services/implementation/SSEService";
 
-const userSockets = new Map<string, Response>();
+const sseService = new SSEService();
 
 export default function eventsController(req: Request, res: Response) {
 	res.setHeader("Content-Type", "text/event-stream");
 	res.setHeader("Cache-Control", "no-cache");
 	res.setHeader("Connection", "keep-alive");
-	res.setHeader("X-Accel-Buffering", "no"); // 🔥 Critical for Nginx
-	res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ Add CORS if needed
+	res.setHeader("X-Accel-Buffering", "no");
+	res.setHeader("Access-Control-Allow-Origin", "*");
 
 	const userId = req.user.id;
-	const { workspaceId } = req.params;
+	const { workspaceId, spaceId } = req.params;
 
 	if (!userId) {
 		res.sendStatus(400);
 		return;
 	}
 
-	userSockets.set(`${userId}:${workspaceId}`, res);
+	sseService.registerConnection({
+		userId,
+		workspaceId,
+		spaceId,
+		response: res,
+	});
 
 	logger.debug(`✔️ User ${userId} connected to SSE`);
-
-	// res.write(`data: ${JSON.stringify({ test: "hi" })}\n\n`);
-	// res.flush(); // 🔥 Force immediate data delivery
 
 	// Keep connection alive with heartbeat
 	const keepAlive = setInterval(() => {
 		res.write(":\n\n");
-		res.flush(); // ✅ Ensure heartbeat is sent immediately
+		res.flush();
 	}, 5000);
 
 	req.on("close", () => {
-		userSockets.delete(`${userId}:${workspaceId}`);
+		sseService.removeConnection(userId, workspaceId, spaceId);
 		clearInterval(keepAlive);
-		res.end(); // 🔥 Properly close connection
+		res.end();
 		logger.debug(`✔️ User ${userId} disconnected from SSE`);
 	});
 }
@@ -48,29 +51,10 @@ export async function sendVideoStatusUpdate(value: {
 	event: string;
 }) {
 	try {
-		const video = await new VideoRepository().getVideoById(value.videoId);
-		if (!video) {
-			logger.error(`🔴 Video ${value.videoId} not found`);
-			return;
-		}
+		const videoRepo = new VideoRepository();
 
-		const userResponse = userSockets.get(
-			`${video.userId}:${video.workspaceId}`
-		);
-		if (userResponse) {
-			userResponse.write(
-				`data: ${JSON.stringify({
-					...value,
-					type: video.type,
-					folderId: video.folderId,
-					workspaceId: video.workspaceId,
-					spaceId: video.spaceId,
-				})}\n\n`
-			);
-			logger.info(`✅ Sent update to user ${video.userId}: ${value.message}`);
-		} else {
-			logger.warn(`⚠️ User ${video.userId} not connected to SSE`);
-		}
+		sseService.sendVideoStatusUpdate(videoRepo, value);
+
 	} catch (error) {
 		logger.error(
 			`🔴 Error sending SSE event to user for video: ${value.videoId}:`,
@@ -79,7 +63,7 @@ export async function sendVideoStatusUpdate(value: {
 	}
 }
 
-export async function handleTestEvents(req, res) {
+/* export async function handleTestEvents(req, res) {
 	logger.debug("==================== Testing events ====================");
 
 	const key = "67a372a0be2e27143ea646b6:67a372a1f9ec9fea4a997014";
@@ -141,3 +125,4 @@ export async function handleTestEvents(req, res) {
 
 	res.sendStatus(200);
 }
+ */

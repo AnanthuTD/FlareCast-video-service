@@ -9,11 +9,12 @@ export interface VideoStatusUpdateEvent {
 }
 
 export interface ISSEService {
-	registerConnection(
-		userId: string,
-		workspaceId: string,
-		response: Response
-	): void;
+	registerConnection(data: {
+		userId: string;
+		workspaceId: string;
+		spaceId?: string;
+		response: Response;
+	}): void;
 	removeConnection(userId: string, workspaceId: string): void;
 	sendVideoStatusUpdate(
 		videoRepository: IVideoRepository,
