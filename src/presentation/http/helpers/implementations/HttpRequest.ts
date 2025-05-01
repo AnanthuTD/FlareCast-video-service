@@ -26,7 +26,7 @@ export class HttpRequest implements IHttpRequest {
 	 */
 	params?: unknown;
 
-	user?: { id: string; [key: string]: string };
+	user?: { id: string; role: "user" | "admin"; [key: string]: string };
 
 	cookies?: {
 		refreshToken?: string;
@@ -37,7 +37,7 @@ export class HttpRequest implements IHttpRequest {
 
 	headers?: unknown;
 
-	res?: Response
+	res?: Response;
 
 	/**
 	 * Initializes a new instance of the `HttpRequest` class.
