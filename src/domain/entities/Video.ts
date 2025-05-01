@@ -76,6 +76,8 @@ export class VideoEntity {
 	private _user: UserProps | null;
 
 	constructor(props: IVideoEntity) {
+		console.log(props);
+
 		this._id = props.id;
 		this._title = props.title;
 		this._description = props.description;
@@ -158,12 +160,12 @@ export class VideoEntity {
 
 	// Business methods
 	public makePublic(): void {
-		if (this._processing) {
+		/* if (this._processing) {
 			throw new Error("Cannot make video public while processing");
 		}
 		if (this._transcodeStatus !== VideoStatus.SUCCESS) {
 			throw new Error("Video must be successfully transcoded to be public");
-		}
+		} */
 		this._isPublic = true;
 	}
 
@@ -307,6 +309,7 @@ export class VideoEntity {
 	}
 
 	public get isPublic(): boolean {
+		console.log("isPublic: ", this._isPublic);
 		return this._isPublic;
 	}
 

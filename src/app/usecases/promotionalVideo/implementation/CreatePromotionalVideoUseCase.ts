@@ -38,6 +38,7 @@ export class CreatePromotionalVideoUseCase
 				title,
 				description,
 				category,
+				isPublic: true
 			});
 
 			const updatedVideo = await this.videoRepository.updateTitleAndDescription(

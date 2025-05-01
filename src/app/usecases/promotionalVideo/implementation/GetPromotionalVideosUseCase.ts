@@ -19,19 +19,25 @@ export class GetPromotionalVideosUseCase
 				| { error: GetPromotionalVideosErrorType };
 		}
 	> {
-		const { skip, limit, category } = dto;
+		const { skip, limit, category, role } = dto;
 
 		const skipNum = Math.max(skip, 0);
 		const limitNum = Math.max(limit, 1);
+
+		console.log("role = ", role);
 
 		try {
 			const videos = await this.videoRepository.findPromotionalVideos(
 				skipNum,
 				limitNum,
-				category
+				category,
+				role === "user"
 			);
 
+			console.log(videos);
+
 			const videosWithThumbnail = videos.map((v) => ({
+				...v.toObject(),
 				id: v.id,
 				totalViews: v.totalViews ?? 0,
 				uniqueViews: v.uniqueViews ?? 0,
@@ -39,8 +45,6 @@ export class GetPromotionalVideosUseCase
 				createdAt: v.createdAt,
 				thumbnailUrl: `${env.AWS_CLOUDFRONT_URL}/${v.id}/thumbnails/thumb00001.jpg`,
 				views: v.totalViews ?? 0,
-				comments: 6,
-				shares: 10,
 				timeAgo: getTimeAgo(v.createdAt),
 				userAvatarUrl: null,
 				category,
@@ -49,6 +53,7 @@ export class GetPromotionalVideosUseCase
 			// Calculate pagination metadata
 			const totalCount = await this.videoRepository.countPromotionalVideos({
 				category,
+				isPublic: role === "user",
 			});
 			const totalPages = Math.ceil(totalCount / limitNum);
 			const hasNextPage = skipNum + videos.length < totalCount;

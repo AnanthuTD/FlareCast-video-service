@@ -102,9 +102,16 @@ export interface IVideoRepository {
 	findPromotionalVideos(
 		skip: number,
 		limit: number,
-		category: VideoCategory
+		category: VideoCategory,
+		isPublic?: boolean
 	): Promise<VideoEntity[]>;
-	countPromotionalVideos({ category }: { category: string }): Promise<number>;
+	countPromotionalVideos({
+		category,
+		isPublic,
+	}: {
+		category: string;
+		isPublic?: boolean;
+	}): Promise<number>;
 
 	findVideos(query: any, skip: number, limit: number): Promise<VideoEntity[]>;
 	countVideos(query: any): Promise<number>;

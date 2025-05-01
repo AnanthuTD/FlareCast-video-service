@@ -460,31 +460,28 @@ export class VideoRepository implements IVideoRepository {
 	async findPromotionalVideos(
 		skip: number,
 		limit: number,
-		category: VideoCategory
+		category: VideoCategory,
+		isPublic: boolean = false
 	): Promise<VideoEntity[]> {
+		console.log("query = ", { category, ...(isPublic ? { isPublic } : {}) });
 		const prismaVideos = await prisma.video.findMany({
-			where: { category },
+			where: { category, ...(isPublic ? { isPublic } : {}) },
 			skip,
 			take: limit,
 			orderBy: { createdAt: "desc" },
-			select: {
-				totalViews: true,
-				createdAt: true,
-				uniqueViews: true,
-				duration: true,
-				id: true,
-			},
 		});
 		return prismaVideos.map((v) => VideoRepository.toDomainEntity(v));
 	}
 
 	async countPromotionalVideos({
 		category = "PROMOTIONAL",
+		isPublic = false,
 	}: {
 		category: string;
+		isPublic?: boolean;
 	}): Promise<number> {
 		return prisma.video.count({
-			where: { category },
+			where: { category, ...(isPublic ? { isPublic } : {}) },
 		});
 	}
 

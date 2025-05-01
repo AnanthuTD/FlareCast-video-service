@@ -11,39 +11,54 @@ import { IGetPromotionalVideosUseCase } from "@/app/usecases/promotionalVideo/IG
 import { VideoCategory } from "@prisma/client";
 
 export class GetPromotionalVideosController implements IController {
-  constructor(
-    private readonly getPromotionalVideosUseCase: IGetPromotionalVideosUseCase,
-    private httpErrors: IHttpErrors = new HttpErrors(),
-    private httpSuccess: IHttpSuccess = new HttpSuccess()
-  ) {}
+	constructor(
+		private readonly getPromotionalVideosUseCase: IGetPromotionalVideosUseCase,
+		private httpErrors: IHttpErrors = new HttpErrors(),
+		private httpSuccess: IHttpSuccess = new HttpSuccess()
+	) {}
 
-  async handle(httpRequest: HttpRequest): Promise<IHttpResponse> {
-    let error;
-    const { skip = "0", limit = "10", category } = httpRequest.query as {
-      skip?: string;
-      limit?: string;
-      category?: VideoCategory
-    };
+	async handle(httpRequest: HttpRequest): Promise<IHttpResponse> {
+		let error;
+		let role: 'user' | 'admin' = "user";
 
-    const response = await this.getPromotionalVideosUseCase.execute({
-      skip: parseInt(skip, 10) || 0,
-      limit: parseInt(limit, 10) || 10,
-      category
-    });
+		const user = httpRequest.user;
 
-    if (!response.success) {
-      const errorType = response.data.error as GetPromotionalVideosErrorType;
-      switch (errorType) {
-        case GetPromotionalVideosErrorType.INVALID_PAGINATION:
-          error = this.httpErrors.badRequest();
-          return new HttpResponse(error.statusCode, { message: errorType });
-        default:
-          error = this.httpErrors.internalServerError();
-          return new HttpResponse(error.statusCode, { message: "Internal server error" });
-      }
-    }
+		if (user && user.role) {
+			role = user.role;
+		}
 
-    const success = this.httpSuccess.ok(response.data);
-    return new HttpResponse(success.statusCode, success.body);
-  }
+		const {
+			skip = "0",
+			limit = "10",
+			category,
+		} = httpRequest.query as {
+			skip?: string;
+			limit?: string;
+			category?: VideoCategory;
+		};
+
+		const response = await this.getPromotionalVideosUseCase.execute({
+			skip: parseInt(skip, 10) || 0,
+			limit: parseInt(limit, 10) || 10,
+			category: category || "PROMOTIONAL",
+			role,
+		});
+
+		if (!response.success) {
+			const errorType = response.data.error as GetPromotionalVideosErrorType;
+			switch (errorType) {
+				case GetPromotionalVideosErrorType.INVALID_PAGINATION:
+					error = this.httpErrors.badRequest();
+					return new HttpResponse(error.statusCode, { message: errorType });
+				default:
+					error = this.httpErrors.internalServerError();
+					return new HttpResponse(error.statusCode, {
+						message: "Internal server error",
+					});
+			}
+		}
+
+		const success = this.httpSuccess.ok(response.data);
+		return new HttpResponse(success.statusCode, success.body);
+	}
 }
