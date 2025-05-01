@@ -58,4 +58,9 @@ export interface IEventService {
 		viewerName: string;
 		viewerId: string;
 	}): Promise<void>;
+
+	sendVideoRemovedEvent(data: {
+		videoId: string;
+		userId: string;
+	}): Promise<void>;
 }

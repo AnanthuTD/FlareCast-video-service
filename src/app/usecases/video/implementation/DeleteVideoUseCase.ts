@@ -1,18 +1,18 @@
 import { ResponseDTO } from "@/domain/dtos/Response";
 import { IVideoRepository } from "@/app/repository/IVideoRepository";
-import { IS3Service } from "@/app/services/implementation/S3Service";
-import { IKafkaService } from "@/app/services/KafkaService";
 import { logger } from "@/infra/logger";
 import { IDeleteVideoUseCase } from "../IDeleteVideoUseCase";
 import { DeleteVideoDTO } from "@/domain/dtos/video/DeleteVideoDTO";
 import { DeleteVideoResponseDTO } from "@/domain/dtos/video/DeleteVideoResponseDTO";
 import { DeleteVideoErrorType } from "@/domain/enums/video/DeleteVideoErrorType";
+import { IEventService } from "@/app/services/IEventService";
+import { IS3Service } from "@/app/services/IS3Service";
 
 export class DeleteVideoUseCase implements IDeleteVideoUseCase {
   constructor(
     private readonly videoRepository: IVideoRepository,
     private readonly s3Service: IS3Service,
-    private readonly kafkaService: IKafkaService
+    private readonly kafkaService: IEventService
   ) {}
 
   async execute(
@@ -24,7 +24,7 @@ export class DeleteVideoUseCase implements IDeleteVideoUseCase {
   > {
     const { videoId, userId } = dto;
 
-    if (!videoId || !userId) {
+    if (!videoId /* || !userId */) {
       return {
         success: false,
         data: { error: DeleteVideoErrorType.INVALID_INPUT },

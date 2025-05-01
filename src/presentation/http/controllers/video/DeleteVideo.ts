@@ -19,7 +19,7 @@ export class DeleteVideoController implements IController {
   async handle(httpRequest: HttpRequest): Promise<IHttpResponse> {
     let error;
     const { videoId } = httpRequest.params as { videoId: string };
-    const userId = httpRequest.user?.id;
+    const userId = httpRequest?.user?.id;
 
     const response = await this.deleteVideoUseCase.execute({
       videoId,
