@@ -137,4 +137,14 @@ export interface IVideoRepository {
 	): Promise<VideoEntity[]>;
 
 	setDuration(videoId: string, duration: string): Promise<any>;
+
+	move({
+		folderId,
+		spaceId,
+		videoId,
+	}: {
+		folderId?: string;
+		spaceId?: string;
+		videoId: string;
+	}): Promise<void>;
 }

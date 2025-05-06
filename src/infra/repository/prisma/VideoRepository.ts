@@ -622,4 +622,46 @@ export class VideoRepository implements IVideoRepository {
 
 		return aggregatedData;
 	}
+
+	async move({
+		folderId,
+		spaceId,
+		videoId,
+	}: {
+		folderId?: string;
+		spaceId?: string;
+		videoId: string;
+	}) {
+		const setFields: Record<string, any> = {};
+		const unsetFields: Record<string, any> = {};
+
+		if (folderId) {
+			setFields.folderId = { $oid: folderId };
+		} else if (spaceId) {
+			setFields.spaceId = { $oid: spaceId };
+			unsetFields.folderId = "";
+		} else {
+			unsetFields.folderId = "";
+			unsetFields.spaceId = "";
+		}
+
+		const updateOperation: Record<string, any> = {};
+		if (Object.keys(setFields).length) updateOperation["$set"] = setFields;
+		if (Object.keys(unsetFields).length)
+			updateOperation["$unset"] = unsetFields;
+
+		console.log("Mongo Update:", updateOperation);
+
+		const result = await prisma.$runCommandRaw({
+			update: "Video",
+			updates: [
+				{
+					q: { _id: { $oid: videoId } },
+					u: updateOperation,
+				},
+			],
+		});
+
+		console.log(result);
+	}
 }
