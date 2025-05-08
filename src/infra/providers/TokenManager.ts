@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { verify, decode } from "jsonwebtoken";
-import { ITokenManagerProvider } from "../../app/providers/ITokenManager";
 import env from "../env";
 import { injectable } from "inversify";
 import { logger } from "../logger";
@@ -44,28 +43,6 @@ export class TokenManagerProvider implements ITokenManagerProvider {
 			verify(token, env.ADMIN_ACCESS_TOKEN_SECRET || "");
 			return true;
 		} catch (error) {
-			return false;
-		}
-	}
-
-	validateRefreshToken(token: string): boolean {
-		try {
-			console.log(token);
-			console.log(env.REFRESH_TOKEN_SECRET)
-			verify(token, env.REFRESH_TOKEN_SECRET || "");
-			return true;
-		} catch (error) {
-			console.log(error);
-			return false;
-		}
-	}
-	validateAdminRefreshToken(token: string): boolean {
-		try {
-			console.log(token);
-			verify(token, env.ADMIN_REFRESH_TOKEN_SECRET || "");
-			return true;
-		} catch (error) {
-			console.log(error);
 			return false;
 		}
 	}

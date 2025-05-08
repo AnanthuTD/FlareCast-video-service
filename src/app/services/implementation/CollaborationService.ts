@@ -48,7 +48,7 @@ export class CollaborationService implements ICollaborationService {
             error instanceof Error ? error.message : error
           }`
         );
-        console.log(error)
+        console.error(error)
         if (attempt < maxRetries - 1) {
           await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
         }

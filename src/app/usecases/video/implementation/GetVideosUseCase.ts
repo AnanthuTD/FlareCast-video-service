@@ -59,8 +59,6 @@ export class GetVideosUseCase implements IGetVideosUseCase {
         query.userId = dto.userId;
       }
 
-      console.log(query)
-
       // Fetch videos
       const videos = await this.videoRepository.findVideos(query, skipNum, limitNum);
 

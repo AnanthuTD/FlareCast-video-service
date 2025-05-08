@@ -8,6 +8,7 @@ import { HttpRequest } from "@smithy/protocol-http";
 import { parseUrl } from "@smithy/url-parser";
 import { formatUrl } from "@aws-sdk/util-format-url";
 import s3Client from "@/infra/s3";
+import { logger } from "@/infra/logger";
 
 export class AwsRepository implements IAwsRepository {
 	createPresignedUrlWithoutClient = async ({ region, bucket, key }) => {
@@ -62,7 +63,7 @@ export class AwsRepository implements IAwsRepository {
 				);
 			}
 
-			console.log(
+			logger.info(
 				`Successfully copied folder ${sourceVideoId}/ to ${newVideoId}/`
 			);
 		} catch (error) {

@@ -67,8 +67,6 @@ export class GetVideoDetailsUseCase implements IGetVideoDetailsUseCase {
 				}
 			}
 
-			console.log(userId, videoId, video.workspaceId);
-
 			const watchLater = await this.watchLaterRepository.findByUserAndVideo(
 				userId,
 				videoId,

@@ -38,8 +38,6 @@ export class GeneratePresignedUrlUseCase implements IGeneratePresignedUrlUseCase
         };
       }
 
-      console.log(video.title)
-
       // Basic permission check
       if (video.userId !== userId) {
         // TODO: Add more sophisticated permission logic if needed

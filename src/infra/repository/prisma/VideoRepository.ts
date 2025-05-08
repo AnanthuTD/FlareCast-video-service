@@ -83,7 +83,6 @@ export class VideoRepository implements IVideoRepository {
 	}
 
 	async create(data: Partial<Video>): Promise<VideoEntity> {
-		console.log(data);
 		const prismaVideo = await prisma.video.create({
 			...(data ? { data } : {}),
 		});
@@ -463,7 +462,6 @@ export class VideoRepository implements IVideoRepository {
 		category: VideoCategory,
 		isPublic: boolean = false
 	): Promise<VideoEntity[]> {
-		console.log("query = ", { category, ...(isPublic ? { isPublic } : {}) });
 		const prismaVideos = await prisma.video.findMany({
 			where: { category, ...(isPublic ? { isPublic } : {}) },
 			skip,
@@ -616,10 +614,6 @@ export class VideoRepository implements IVideoRepository {
 			],
 		});
 
-		logger.info("================= status count =================");
-		console.log(aggregatedData);
-		logger.info("==============================================");
-
 		return aggregatedData;
 	}
 
@@ -650,8 +644,6 @@ export class VideoRepository implements IVideoRepository {
 		if (Object.keys(unsetFields).length)
 			updateOperation["$unset"] = unsetFields;
 
-		console.log("Mongo Update:", updateOperation);
-
 		const result = await prisma.$runCommandRaw({
 			update: "Video",
 			updates: [
@@ -661,7 +653,5 @@ export class VideoRepository implements IVideoRepository {
 				},
 			],
 		});
-
-		console.log(result);
 	}
 }

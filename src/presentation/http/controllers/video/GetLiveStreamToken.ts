@@ -47,8 +47,6 @@ export class GetLiveStreamTokenController implements IController {
       }
     }
 
-    console.log(response.data)
-
     const success = this.httpSuccess.ok(response.data);
     return new HttpResponse(success.statusCode, success.body);
   }

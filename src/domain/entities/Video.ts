@@ -76,8 +76,6 @@ export class VideoEntity {
 	private _user: UserProps | null;
 
 	constructor(props: IVideoEntity) {
-		console.log(props);
-
 		this._id = props.id;
 		this._title = props.title;
 		this._description = props.description;
@@ -309,7 +307,6 @@ export class VideoEntity {
 	}
 
 	public get isPublic(): boolean {
-		console.log("isPublic: ", this._isPublic);
 		return this._isPublic;
 	}
 

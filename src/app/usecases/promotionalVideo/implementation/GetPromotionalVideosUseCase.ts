@@ -24,8 +24,6 @@ export class GetPromotionalVideosUseCase
 		const skipNum = Math.max(skip, 0);
 		const limitNum = Math.max(limit, 1);
 
-		console.log("role = ", role);
-
 		try {
 			const videos = await this.videoRepository.findPromotionalVideos(
 				skipNum,
@@ -33,8 +31,6 @@ export class GetPromotionalVideosUseCase
 				category,
 				role === "user"
 			);
-
-			console.log(videos);
 
 			const videosWithThumbnail = videos.map((v) => ({
 				...v.toObject(),

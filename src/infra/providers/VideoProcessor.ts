@@ -32,7 +32,6 @@ export class VideoProcessor {
 		socketId: string;
 	}) {
 		logger.info("Processing video requested");
-		console.log(data);
 		await this.eventService.publishVideoProcessRequestEvent(data);
 	}
 
@@ -54,8 +53,6 @@ export class VideoProcessor {
 				() => {
 					eventConsumer.resume([{ topic: TOPICS.VIDEO_PROCESS_REQUEST_EVENT }]);
 				} */
-
-			console.log("validateWorkspace: ", data);
 
 			const selectedData = await workspaceService.getSelectedWorkspace(data);
 
@@ -82,7 +79,6 @@ export class VideoProcessor {
 		socketId: string;
 	}) {
 		logger.info("Validate Subscription");
-		console.log(data);
 		const limits = await this.subscriptionRepo.getLimits(data.userId);
 		if (limits.permission !== "granted") {
 			throw new Error("Subscription limits not granted");
@@ -103,8 +99,6 @@ export class VideoProcessor {
 		subscriptionLimits: any;
 		socketId: string;
 	}) {
-		logger.info("create video");
-		console.log(data);
 		const newVideo = await this.videoRepo.create({
 			userId: data.userId,
 			workspaceId: data.workspaceId,
@@ -125,8 +119,6 @@ export class VideoProcessor {
 		socketId: string;
 	}) {
 		try {
-			logger.info("upload video");
-			console.log(data);
 			const inputVideo = path.join(process.cwd(), "temp_upload", data.fileName);
 			const s3Key = `${data.videoId}/original.${data.fileName
 				.split(".")

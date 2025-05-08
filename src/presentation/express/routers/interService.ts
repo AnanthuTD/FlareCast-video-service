@@ -17,7 +17,6 @@ router.post(
 			request,
 			createPromotionalVideoComposer()
 		);
-		console.log("⚠️adapter: ", adapter);
 		response.status(adapter.statusCode).json(adapter.body);
 	}
 );
