@@ -26,7 +26,7 @@ export class CreatePromotionalVideoUseCase
 	> {
 		const { title, description, videoExtension, category } = dto;
 
-		if (!title || !videoExtension) {
+		if (!videoExtension) {
 			return {
 				success: false,
 				data: { error: CreatePromotionalVideoErrorType.INVALID_INPUT },
