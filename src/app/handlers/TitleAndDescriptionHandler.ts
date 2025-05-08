@@ -45,13 +45,13 @@ export class TitleAndDescriptionHandler implements IEventHandler {
 				return;
 			}
 
-			if (video.titleStatus === VideoStatus.SUCCESS) {
+			/* if (video.titleStatus === VideoStatus.SUCCESS) {
 				logger.info(
 					"🟡 Skipping title & description update for video\t" +
 						JSON.stringify(data)
 				);
 				return;
-			}
+			} */
 
 			await this.videoRepository.updateTitleAndDescription(
 				data.videoId,
